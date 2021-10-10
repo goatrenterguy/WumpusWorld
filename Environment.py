@@ -9,9 +9,9 @@ class WorldBuilder:
         self.difficulty = difficulty
         # TODO: Tweak values or create more control depending on size
         # Establish probabilities per difficulty
-        self.difficulties = {'easy': {'Pwumpus': .05, 'Ppit': .05, 'Pobs': .05},
-                             'med': {'Pwumpus': .07, 'Ppit': .07, 'Pobs': .1},
-                             'hard': {'Pwumpus': .1, 'Ppit': .11, 'Pobs': .2}}
+        self.difficulties = {'easy': {'Pwumpus': .05, 'Ppit': .05, 'Pobs': .1},
+                             'med': {'Pwumpus': .07, 'Ppit': .07, 'Pobs': .2},
+                             'hard': {'Pwumpus': .1, 'Ppit': .11, 'Pobs': .3}}
         self.placeGold()
         self.placeWumpus(self.difficulties[difficulty]['Pwumpus'])
         self.placePit(self.difficulties[difficulty]['Ppit'])
@@ -24,12 +24,18 @@ class WorldBuilder:
             strLevel += repr(lines) + "\n"
         return strLevel
 
-    # Randomly place wumpuses on level
+    # Randomly place wumpus on level (only one?)
     def placeWumpus(self, probability: float):
-        for x in range(self.size):
-            for y in range(self.size):
-                if self.board[y][x] == ' ' and random.random() < probability and (x != 0 or y != 0):
-                    self.board[y][x] = 'W'
+        # for x in range(self.size):
+        #     for y in range(self.size):
+        #         if self.board[y][x] == ' ' and random.random() < probability and (x != 0 or y != 0):
+        #             self.board[y][x] = 'W'
+        while True:
+            x = random.randint(0, self.size - 1)
+            y = random.randint(0, self.size - 1)
+            if self.board[y][x] == ' ' and y != 0 and x != 0:
+                self.board[y][x] = "W"
+                break
 
     # Randomly place pits on level
     def placePit(self, probability):
@@ -58,10 +64,12 @@ class WorldBuilder:
 class World:
     def __init__(self, levels):
         self.world = []
+        self.percepts = []
         # Establish board sizes
         self.sizes = [5, 10, 15, 20, 25]
         self.difficulties = ['easy', 'med', 'hard']
         self.buildLevels(levels)
+        self.buildPercepts()
 
     # Override default print
     def __repr__(self):
@@ -70,6 +78,48 @@ class World:
             strWorld += repr(levels) + "\n"
         strWorld += "\n+----------------------------------+\n"
         return strWorld
+
+    # Build board of percepts based on
+    def buildPercepts(self):
+        board = []
+        for level in self.world:
+            for y in range(len(level.board)):
+                for x in range(y):
+                    percept = ['None', 'None', 'None', 'None', 'None']
+                    neighbors = self.neighbors(level.board, x, y)
+                    if 'W' in neighbors:
+                        percept[0] = 'Smell'
+                    if 'P' in neighbors:
+                        percept[1] = 'Breeze'
+                    if 'G' in neighbors:
+                        percept[2] = 'Glitter'
+                    board.append(percept)
+        self.percepts.append(board)
+
+    # Get neighbors of on level level at x,y
+    def neighbors(self, board, x, y):
+        neighbors = []
+        # Try west of x,y
+        try:
+            neighbors.append(board[y - 1][x])
+        except IndexError:
+            neighbors.append('None')
+        # Try east of x,y
+        try:
+            neighbors.append(board[y][x + 1])
+        except IndexError:
+            neighbors.append('None')
+        # Try south of x,y
+        try:
+            neighbors.append(board[y+1][x])
+        except IndexError:
+            neighbors.append('None')
+        # Try west of x,y
+        try:
+            neighbors.append(board[y][x - 1])
+        except IndexError:
+            neighbors.append('None')
+        return neighbors
 
     # Build levels for world
     def buildLevels(self, levels):
