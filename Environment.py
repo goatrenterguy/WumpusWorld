@@ -7,10 +7,11 @@ class WorldBuilder:
         self.board = [[' '] * size for i in range(size)]
         self.size = size
         self.difficulty = difficulty
+        # TODO: Tweak values or create more control depending on size
         # Establish probabilities per difficulty
         self.difficulties = {'easy': {'Pwumpus': .05, 'Ppit': .05, 'Pobs': .05},
-                             'med': {'Pwumpus': .1, 'Ppit': .1, 'Pobs': .1},
-                             'hard': {'Pwumpus': .15, 'Ppit': .15, 'Pobs': .15}}
+                             'med': {'Pwumpus': .07, 'Ppit': .07, 'Pobs': .1},
+                             'hard': {'Pwumpus': .1, 'Ppit': .11, 'Pobs': .2}}
         self.placeGold()
         self.placeWumpus(self.difficulties[difficulty]['Pwumpus'])
         self.placePit(self.difficulties[difficulty]['Ppit'])
@@ -76,11 +77,3 @@ class World:
             for difficulty in self.difficulties:
                 for level in range(levels):
                     self.world.append(WorldBuilder(size, difficulty))
-
-
-class Main:
-    World = World(1)
-    print(World.world[0])
-
-
-Main()
