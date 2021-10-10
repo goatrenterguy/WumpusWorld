@@ -11,7 +11,7 @@ class KnowledgeBase:
 
 class Main:
     World = World(1)
-    print(World.percepts)
+    print(World.percepts[0])
 
 
 Main()

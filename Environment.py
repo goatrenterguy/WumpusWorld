@@ -81,10 +81,12 @@ class World:
 
     # Build board of percepts based on
     def buildPercepts(self):
-        board = []
+
         for level in self.world:
-            for y in range(len(level.board)):
-                for x in range(y):
+            board = []
+            for y in range(len(level.board[0])):
+                perceptRow = []
+                for x in range(len(level.board[0])):
                     percept = ['None', 'None', 'None', 'None', 'None']
                     neighbors = self.neighbors(level.board, x, y)
                     if 'W' in neighbors:
@@ -93,8 +95,9 @@ class World:
                         percept[1] = 'Breeze'
                     if 'G' in neighbors:
                         percept[2] = 'Glitter'
-                    board.append(percept)
-        self.percepts.append(board)
+                    perceptRow.append(percept)
+                board.append(perceptRow)
+            self.percepts.append(board)
 
     # Get neighbors of on level level at x,y
     def neighbors(self, board, x, y):
