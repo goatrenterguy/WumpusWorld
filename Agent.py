@@ -10,21 +10,49 @@ class Expression:
 
 class Explorer:
     def __init__(self):
-        self.kb = KnowledgeBase()
         self.location = (0, 0)
         self.facing = 'South'
         self.time = 0
+        self.points = 0
+        self.numGold = 0
+        self.numWumpusKilled = 0
+        self.numPitsFallenIn = 0
+        self.numCellsExplored = 0
+        self.numWumpusKilledBy = 0
+        self.NumActions = 0
+        self.age = 0
+        self.arrows = 0
+        self.KB = KnowledgeBase()
+
+    # Move the explorer forward
+    def moveForward(self):
+        pass
+
+    # Turn the explorer
+    def turn(self, direction):
+        pass
+
+    # Runner for the agent to find the gold
+    def findGold(self):
+        # Need to visit all known unvisited safe squares
+        #     Record percepts and see if we can make any new inferences in KB
+        # If Gold found grab and exit
+        # If wumpus known and have arrows kill
+        # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
+        pass
 
 
 class KnowledgeBase:
-    def isCompound(self, expr):
+    @staticmethod
+    def isCompound(expr):
         if "&" in expr or "|" in expr:
             return True
         return False
 
     # def getOperators(self, expr):
 
-    def isVariable(self, var):
+    @staticmethod
+    def isVariable(var):
         if var.isLower():
             return True
         return False
@@ -81,9 +109,8 @@ class KnowledgeBase:
         # if Safe([x,y]) then return safe
         # if unknown check possibilities i.e check neighbors for smells and see if we can infer if there is a wumpus using proof by contradiction
         scent, breeze, glitter, bump, scream = True
-        
-        pass
 
+        pass
 
 
 class Main:
