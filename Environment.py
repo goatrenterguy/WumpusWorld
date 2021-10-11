@@ -16,6 +16,7 @@ class WorldBuilder:
         self.placeWumpus(self.difficulties[difficulty]['Pwumpus'])
         self.placePit(self.difficulties[difficulty]['Ppit'])
         self.placeObs(self.difficulties[difficulty]['Pobs'])
+        self.placeAgent()
 
     # String representation
     def __repr__(self):
@@ -23,6 +24,15 @@ class WorldBuilder:
         for lines in self.board:
             strLevel += repr(lines) + "\n"
         return strLevel
+
+    # Randomly place agent
+    def placeAgent(self):
+        while True:
+            x = random.randint(0, self.size - 1)
+            y = random.randint(0, self.size - 1)
+            if self.board[y][x] == ' ' and y != 0 and x != 0:
+                self.board[y][x] = "A"
+                break
 
     # Randomly place wumpus on level (only one?)
     def placeWumpus(self, probability: float):
