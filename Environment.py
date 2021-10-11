@@ -5,6 +5,8 @@ import random
 class WorldBuilder:
     def __init__(self, size, difficulty):
         self.board = [[' '] * size for i in range(size)]
+        self.percepts = None
+        self.agent = None
         self.size = size
         self.difficulty = difficulty
         # TODO: Tweak values or create more control depending on size
@@ -17,6 +19,7 @@ class WorldBuilder:
         self.placePit(self.difficulties[difficulty]['Ppit'])
         self.placeObs(self.difficulties[difficulty]['Pobs'])
         self.placeAgent()
+        self.buildPercepts()
 
     # String representation
     def __repr__(self):
@@ -24,6 +27,58 @@ class WorldBuilder:
         for lines in self.board:
             strLevel += repr(lines) + "\n"
         return strLevel
+
+        # Build board of percepts based on
+
+    def buildPercepts(self):
+        board = []
+        for y in range(len(self.board[0])):
+            perceptRow = []
+            for x in range(len(self.board[0])):
+                percept = ['None', 'None', 'None', 'None', 'None']
+                if self.board[y][x] == 'A':
+                    self.agent = [x, y]
+                neighbors = self.neighbors(x, y)
+                if 'X' in neighbors:
+                    percept[3] = 'Bump'
+                    perceptRow.append(percept)
+                    break
+                if 'W' in neighbors:
+                    percept[0] = 'Smell'
+                if 'P' in neighbors:
+                    percept[1] = 'Breeze'
+                if 'G' in neighbors:
+                    percept[2] = 'Glitter'
+
+                perceptRow.append(percept)
+            board.append(perceptRow)
+        self.percepts = board
+
+        # Get neighbors of on level level at x,y
+
+    def neighbors(self, x, y):
+        neighbors = []
+        # Try west of x,y
+        try:
+            neighbors.append(self.board[y - 1][x])
+        except IndexError:
+            neighbors.append('None')
+        # Try east of x,y
+        try:
+            neighbors.append(self.board[y][x + 1])
+        except IndexError:
+            neighbors.append('None')
+        # Try south of x,y
+        try:
+            neighbors.append(self.board[y + 1][x])
+        except IndexError:
+            neighbors.append('None')
+        # Try west of x,y
+        try:
+            neighbors.append(self.board[y][x - 1])
+        except IndexError:
+            neighbors.append('None')
+        return neighbors
 
     # Randomly place agent
     def placeAgent(self):
@@ -73,70 +128,25 @@ class WorldBuilder:
 # Class for storing levels
 class World:
     def __init__(self, levels):
-        self.world = []
+        self.levels = []
         self.percepts = []
         # Establish board sizes
         self.sizes = [5, 10, 15, 20, 25]
         self.difficulties = ['easy', 'med', 'hard']
         self.buildLevels(levels)
-        self.buildPercepts()
+
 
     # Override default print
     def __repr__(self):
         strWorld = "Wumpus World:\n"
-        for levels in self.world:
-            strWorld += repr(levels) + "\n"
+        for level in self.levels:
+            strWorld += repr(level) + "\n"
         strWorld += "\n+----------------------------------+\n"
         return strWorld
-
-    # Build board of percepts based on
-    def buildPercepts(self):
-
-        for level in self.world:
-            board = []
-            for y in range(len(level.board[0])):
-                perceptRow = []
-                for x in range(len(level.board[0])):
-                    percept = ['None', 'None', 'None', 'None', 'None']
-                    neighbors = self.neighbors(level.board, x, y)
-                    if 'W' in neighbors:
-                        percept[0] = 'Smell'
-                    if 'P' in neighbors:
-                        percept[1] = 'Breeze'
-                    if 'G' in neighbors:
-                        percept[2] = 'Glitter'
-                    perceptRow.append(percept)
-                board.append(perceptRow)
-            self.percepts.append(board)
-
-    # Get neighbors of on level level at x,y
-    def neighbors(self, board, x, y):
-        neighbors = []
-        # Try west of x,y
-        try:
-            neighbors.append(board[y - 1][x])
-        except IndexError:
-            neighbors.append('None')
-        # Try east of x,y
-        try:
-            neighbors.append(board[y][x + 1])
-        except IndexError:
-            neighbors.append('None')
-        # Try south of x,y
-        try:
-            neighbors.append(board[y+1][x])
-        except IndexError:
-            neighbors.append('None')
-        # Try west of x,y
-        try:
-            neighbors.append(board[y][x - 1])
-        except IndexError:
-            neighbors.append('None')
-        return neighbors
 
     # Build levels for world
     def buildLevels(self, levels):
         for size in self.sizes:
             for difficulty in self.difficulties:
                 for level in range(levels):
-                    self.world.append(WorldBuilder(size, difficulty))
+                    self.levels.append(WorldBuilder(size, difficulty))
