@@ -83,7 +83,8 @@ class Explorer:
 
     # Runner for the agent to find the gold
     def findGold(self):
-        # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
+        # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors
+        # and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
         #     Record percepts and see if we can make any new inferences in KB
         # If Gold found grab and exit
         # If wumpus known and have arrows kill
@@ -94,6 +95,12 @@ class Explorer:
 class KnowledgeBase:
     def __init__(self):
         self.KB = []
+
+    def tell(self, fact):
+        # TODO: Find a way we want to store knowledge in KB. Can we save them as objects and create and object for cell
+        #  that contains its attributes i.e smell, explored etc or does it have to be strings / sentences. Can we have a
+        #  KB that stores the strings and then an actual object actual object that stores the data and what they mean?
+        pass
 
     def FolBcAsk(self, goals, theta=[]):
         if not goals:
@@ -174,8 +181,7 @@ class KnowledgeBase:
 
         pass
 
-    def tell(self, fact):
-        pass
+
 
 
 class Main:
