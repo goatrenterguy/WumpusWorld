@@ -87,7 +87,7 @@ class World:
             for y in range(len(level.board[0])):
                 perceptRow = []
                 for x in range(len(level.board[0])):
-                    percept = ['None', 'None', 'None']
+                    percept = ['None', 'None', 'None', 'None', 'None']
                     neighbors = self.neighbors(level.board, x, y)
                     if 'W' in neighbors:
                         percept[0] = 'Smell'
