@@ -1,3 +1,5 @@
+import json
+
 from Environment import *
 
 
@@ -25,13 +27,14 @@ class Explorer:
         self.alive = True
         self.hasGold = False
         self.arrows = 0
-        self.KB = KnowledgeBase()
+        self.KB = None
 
     # Runner for explorer
     def runner(self):
         for level in self.world:
             self.currentLevel = level
             self.location = level.agent
+            self.KB = KnowledgeBase()
             self.findGold(level)
 
     # Move the explorer forward
@@ -93,101 +96,72 @@ class Explorer:
 
 
 class KnowledgeBase:
-    def __init__(self):
-        self.KB = []
+    def __init__(self, levelSize):
+        # self.Clauses = [[Cell] * levelSize for i in range(levelSize)]
+        self.clauses = []
+        self.levelSize = levelSize
+
+    def __repr__(self):
+        return str(self.Clauses[0])
 
     def tell(self, fact):
-        # TODO: Find a way we want to store knowledge in KB. Can we save them as objects and create and object for cell
-        #  that contains its attributes i.e smell, explored etc or does it have to be strings / sentences. Can we have a
-        #  KB that stores the strings and then an actual object actual object that stores the data and what they mean?
+        # TODO: Find a way we want to store knowledge in KB. Can we save them as objects and create and object for
+        #  cell that contains its attributes i.e smell, explored etc or does it have to be strings / sentences. Can
+        #  we have a KB that stores the strings and then an actual object actual object that stores the data and what
+        #  they mean? Can we use a dictionary called as the KB and have sub dictionaries like smell that have all the
+        #  cells we know have a smell?
         pass
 
-    def FolBcAsk(self, goals, theta=[]):
-        if not goals:
-            return theta
-        query = self.Substitute(theta, goals[0])
-        for sentence in self.KB:
-            self.StandardizeApart(sentence)
-
-    @staticmethod
-    def isCompound(expr):
-        if "&" in expr or "|" in expr:
-            return True
-        return False
-
-    # def getOperators(self, expr):
-
-    @staticmethod
-    def isVariable(var):
-        if var.isLower():
-            return True
-        return False
-
-    def Substitute(self, theta, param):
+    # Check if cell is wumpus
+    def isWumpus(self, x, y):
+        # Check if in Clauses
+        # Assume cell is not safe
+        # If cell is not safe then there cant be any neighbor that doesnt have a smell
         pass
 
-    def UnifyVar(self, var, x, theta):
-        if var in theta:
-            return self.Unify(theta[var], x, theta)
-        elif x in theta:
-            return self.Unify(theta[x], var, theta)
-        elif self.OccurCheck(var, x):
-            return None
-        else:
-            theta[var] = x
-            return theta
-
-    def Unify(self, x, y, theta=[]):
-        # Recursive termination
-        if theta is None:
-            return None
-        # Check if x and y are already identical
-        elif x == y:
-            return theta
-        # Check if x is a variable
-        elif self.isVariable(x):
-            # If x is a variable then we need to unify x and y
-            return self.UnifyVar(x, y, theta)
-        # Check if y is a variable
-        elif self.isVariable(y):
-            # If y is a variable then we need to unify y and x
-            return self.UnifyVar(y, x, theta)
-        elif self.isCompound(x) and self.isCompound(y):
-            return self.Unify(x.args, y.args)
-        elif self.isList(x) and self.isList(y):
-            return self.Unify(x[1:], y[1:], self.Unify(x[0], y[0], theta))
-        else:
-            return None
-
-    # Check if var is in x
-    def OccurCheck(self, var, x):
-        for s in x:
-            # If s is a another expression check that expression
-            if isinstance(s, list):
-                # If var in teh sub expression return True
-                if self.OccurCheck(var, s):
-                    return True
-            # If var == s return true
-            elif var == s:
-                return True
-        # Otherwise return False because var is not in x
-        return False
+    # Rule for if the cell is a pit
+    def isPit(self, x, y):
+        # Check if in Clauses
+        # Assume cell is not safe
+        # If the cell is not safe then there cant be any neighbors with a breeze
+        pass
 
     def isSafe(self, x, y):
-        # Check KB if safe
-        # if Safe([x,y]) then return safe
-        # if unknown check possibilities i.e check neighbors for smells and see if we can infer if there is a wumpus using proof by contradiction
+        # Check KB if safe if Safe([x,y]) then return safe if unknown check possibilities i.e check neighbors for
+        # smells and see if we can infer if there is a wumpus using proof by contradiction
         scent, breeze, glitter, bump, scream = True
 
         pass
 
 
+class Cell:
+    def __init__(self):
+        self.visited = False
+        self.smell = None
+        self.breeze = None
+        self.shine = None
+        self.bump = None
+        self.scream = None
+
+    def __repr__(self):
+        rep = {
+            "visted": self.visited,
+            "smell": self.smell,
+            "breeze": self.breeze,
+            "shine": self.shine,
+            "bump": self.bump,
+            "scream": self.scream
+        }
+        return str(json.dumps(rep))
 
 
 class Main:
-    World = World(1)
-    print(World)
-    print()
+    # World = World(1)
+    # print(World)
+    # print()
+    TESTKB = KnowledgeBase(5)
+    cell = Cell()
+    print(cell)
 
 
 Main()

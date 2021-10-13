@@ -28,8 +28,7 @@ class WorldBuilder:
             strLevel += repr(lines) + "\n"
         return strLevel
 
-        # Build board of percepts based on
-
+    # Build board of percepts based on level
     def buildPercepts(self):
         board = []
         for y in range(len(self.board[0])):
@@ -134,7 +133,6 @@ class World:
         self.sizes = [5, 10, 15, 20, 25]
         self.difficulties = ['easy', 'med', 'hard']
         self.buildLevels(levels)
-
 
     # Override default print
     def __repr__(self):
