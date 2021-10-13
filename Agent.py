@@ -1,5 +1,6 @@
 from colorama import Fore, Back, Style
 from Environment import *
+from Objects import *
 
 
 class Expression:
@@ -74,7 +75,7 @@ class Explorer:
             self.numPitsFallenIn += 1
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'X':
             # Tell the KB that there is a obstacle at current location
-            self.KB.tell(self.currentLevel.percepts[self.location[1][self.location[0]]])
+            self.KB.tellPercept(self.currentLevel.percepts[self.location[1][self.location[0]]])
             self.numCellsExplored -= 1
             return False
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'G':
@@ -83,7 +84,8 @@ class Explorer:
             self.hasGold = True
         else:
             # Tell the KB the percepts placeholder fact entered
-            self.KB.tell(self.location[0], self.location[1], self.currentLevel.percepts[self.location[1]][self.location[0]])
+            self.KB.tell(self.location[0], self.location[1],
+                         self.currentLevel.percepts[self.location[1]][self.location[0]])
         return True
 
     # Turn the explorer
@@ -102,6 +104,7 @@ class Explorer:
         # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
         pass
 
+
 # KnowledgeBase Object
 # TODO: Need to add time
 class KnowledgeBase:
@@ -114,9 +117,12 @@ class KnowledgeBase:
         s = "Knowledge Base:\n"
         for claus in self.clauses:
             s += "\t" + str(claus) + "\n"
-        return s + "+--------------------+\n"
+        return s + "+-----------------------------------------------------------------+\n"
 
-    def tell(self, x, y, percepts: list):
+    def tell(self, clause):
+        self.clauses.append(clause)
+
+    def tellPercept(self, x, y, percepts: list):
         # TODO: Find a way we want to store knowledge in KB. Can we save them as objects and create and object for
         #  cell that contains its attributes i.e smell, explored etc or does it have to be strings / sentences. Can
         #  we have a KB that stores the strings and then an actual object actual object that stores the data and what
@@ -133,9 +139,6 @@ class KnowledgeBase:
             self.clauses.append(Bump(cell))
         if "Scream" in percepts:
             self.clauses.append(Scream(cell))
-        else:
-            # Make all neighbors safe
-            pass
 
     # Check if cell is wumpus
     def isWumpus(self, x, y):
@@ -166,92 +169,18 @@ class KnowledgeBase:
         pass
 
 
-class Cell:
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-
-    def __repr__(self):
-        return "Cell(" + str(self.x) + ", " + str(self.y) + ")"
-
-
-# Object that contains a cell that has a smell
-class Smell:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Smell(" + repr(self.cell) + ")"
-
-
-# Object that contains a cell that has a breeze
-class Breeze:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Breeze(" + repr(self.cell) + ")"
-
-
-# Object Bump that contains a cell that is an obstacle
-class Bump:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Bump(" + repr(self.cell) + ")"
-
-
-# Object Glitter that contains a cell if it has glitter in it
-class Glitter:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Scream(" + repr(self.cell) + ")"
-
-
-# Object Scream that contains a cell
-class Scream:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Scream(" + repr(self.cell) + ")"
-
-
-# Object that contains a cell that is a known wumpus
-class Wumpus:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Wumpus(" + repr(self.cell) + ")"
-
-
-# Object that contains a cell that is a known pit
-class Scream:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Pit(" + repr(self.cell) + ")"
-
-
-# Object that contains a cell that is known to be the gold
-class Gold:
-    def __init__(self, cell: Cell):
-        self.cell = cell
-
-    def __repr__(self):
-        return "Gold(" + repr(self.cell) + ")"
-
-
 class Main:
-    world = World(1)
+    # world = World(1)
     # print(world.levels[0].percepts)
-    explorer = Explorer(world)
-    print(explorer.KB)
+    # explorer = Explorer(world)
+    # print(explorer.KB)
+    KB = KnowledgeBase(5)
+    cell = Cell(1, 1)
+    breeze = Breeze(cell)
+    smell = Smell(cell)
+    a = Or(breeze, smell)
+    KB.tell(a)
+    print(KB)
 
 
 Main()
