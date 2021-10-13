@@ -1,5 +1,4 @@
-import json
-
+from colorama import Fore, Back, Style
 from Environment import *
 
 
@@ -28,14 +27,22 @@ class Explorer:
         self.hasGold = False
         self.arrows = 0
         self.KB = None
+        self.KArchive = []
+        self.runner()
 
     # Runner for explorer
     def runner(self):
-        for level in self.world:
+        for level in self.world.levels:
             self.currentLevel = level
             self.location = level.agent
-            self.KB = KnowledgeBase()
-            self.findGold(level)
+            self.KB = KnowledgeBase(level.size)
+            self.findGold()
+            self.KArchive.append(self.KB)
+
+    # Shot arrow
+    def shootArrow(self):
+        if self.arrows != 0:
+            pass
 
     # Move the explorer forward
     def moveForward(self):
@@ -55,28 +62,28 @@ class Explorer:
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
-        if self.level[self.location[1]][self.location[0]] == 'W':
+        if self.currentLevel.board[self.location[1]][self.location[0]] == 'W':
             self.alive = False
             # Can change this value
             self.points -= 10000
             self.numWumpusKilledBy += 1
-        elif self.level[self.location[1]][self.location[0]] == 'P':
+        elif self.currentLevel.board[self.location[1]][self.location[0]] == 'P':
             self.alive = False
             # Can change this value
             self.points -= 10000
             self.numPitsFallenIn += 1
-        elif self.level[self.location[1]][self.location[0]] == 'X':
+        elif self.currentLevel.board[self.location[1]][self.location[0]] == 'X':
             # Tell the KB that there is a obstacle at current location
-            self.KB.tell(["Obs(Cell(x,y))"])
+            self.KB.tell(self.currentLevel.percepts[self.location[1][self.location[0]]])
             self.numCellsExplored -= 1
             return False
-        elif self.level[self.location[1]][self.location[0]] == 'G':
+        elif self.currentLevel.board[self.location[1]][self.location[0]] == 'G':
             self.points += 1000
             self.numGold += 1
             self.hasGold = True
-        elif self.level[self.location[1]][self.location[0]] == ' ':
+        else:
             # Tell the KB the percepts placeholder fact entered
-            self.KB.tell("Percepts(Cell(x,y)")
+            self.KB.tell(self.location[0], self.location[1], self.currentLevel.percepts[self.location[1]][self.location[0]])
         return True
 
     # Turn the explorer
@@ -86,15 +93,17 @@ class Explorer:
 
     # Runner for the agent to find the gold
     def findGold(self):
+        self.perceive()
         # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors
         # and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
         #     Record percepts and see if we can make any new inferences in KB
-        # If Gold found grab and exit
+        # If has gold exit
         # If wumpus known and have arrows kill
         # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
         pass
 
-
+# KnowledgeBase Object
+# TODO: Need to add time
 class KnowledgeBase:
     def __init__(self, levelSize):
         # self.Clauses = [[Cell] * levelSize for i in range(levelSize)]
@@ -102,15 +111,31 @@ class KnowledgeBase:
         self.levelSize = levelSize
 
     def __repr__(self):
-        return str(self.Clauses[0])
+        s = "Knowledge Base:\n"
+        for claus in self.clauses:
+            s += "\t" + str(claus) + "\n"
+        return s + "+--------------------+\n"
 
-    def tell(self, fact):
+    def tell(self, x, y, percepts: list):
         # TODO: Find a way we want to store knowledge in KB. Can we save them as objects and create and object for
         #  cell that contains its attributes i.e smell, explored etc or does it have to be strings / sentences. Can
         #  we have a KB that stores the strings and then an actual object actual object that stores the data and what
         #  they mean? Can we use a dictionary called as the KB and have sub dictionaries like smell that have all the
         #  cells we know have a smell?
-        pass
+        cell = Cell(x, y)
+        if "Smell" in percepts:
+            self.clauses.append(Smell(cell))
+        if "Breeze" in percepts:
+            self.clauses.append(Breeze(cell))
+        if "Glitter" in percepts:
+            self.clauses.append(Glitter(cell))
+        if "Bump" in percepts:
+            self.clauses.append(Bump(cell))
+        if "Scream" in percepts:
+            self.clauses.append(Scream(cell))
+        else:
+            # Make all neighbors safe
+            pass
 
     # Check if cell is wumpus
     def isWumpus(self, x, y):
@@ -126,6 +151,13 @@ class KnowledgeBase:
         # If the cell is not safe then there cant be any neighbors with a breeze
         pass
 
+    # Rule for if the cell is a gold
+    def isGold(self, x, y):
+        # Check if in Clauses
+        # Assume cell is not safe
+        # If the cell is not gold then there cant be any neighbors with a glitter
+        pass
+
     def isSafe(self, x, y):
         # Check KB if safe if Safe([x,y]) then return safe if unknown check possibilities i.e check neighbors for
         # smells and see if we can infer if there is a wumpus using proof by contradiction
@@ -135,33 +167,91 @@ class KnowledgeBase:
 
 
 class Cell:
-    def __init__(self):
-        self.visited = False
-        self.smell = None
-        self.breeze = None
-        self.shine = None
-        self.bump = None
-        self.scream = None
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
 
     def __repr__(self):
-        rep = {
-            "visted": self.visited,
-            "smell": self.smell,
-            "breeze": self.breeze,
-            "shine": self.shine,
-            "bump": self.bump,
-            "scream": self.scream
-        }
-        return str(json.dumps(rep))
+        return "Cell(" + str(self.x) + ", " + str(self.y) + ")"
+
+
+# Object that contains a cell that has a smell
+class Smell:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Smell(" + repr(self.cell) + ")"
+
+
+# Object that contains a cell that has a breeze
+class Breeze:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Breeze(" + repr(self.cell) + ")"
+
+
+# Object Bump that contains a cell that is an obstacle
+class Bump:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Bump(" + repr(self.cell) + ")"
+
+
+# Object Glitter that contains a cell if it has glitter in it
+class Glitter:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Scream(" + repr(self.cell) + ")"
+
+
+# Object Scream that contains a cell
+class Scream:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Scream(" + repr(self.cell) + ")"
+
+
+# Object that contains a cell that is a known wumpus
+class Wumpus:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Wumpus(" + repr(self.cell) + ")"
+
+
+# Object that contains a cell that is a known pit
+class Scream:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Pit(" + repr(self.cell) + ")"
+
+
+# Object that contains a cell that is known to be the gold
+class Gold:
+    def __init__(self, cell: Cell):
+        self.cell = cell
+
+    def __repr__(self):
+        return "Gold(" + repr(self.cell) + ")"
 
 
 class Main:
-    # World = World(1)
-    # print(World)
-    # print()
-    TESTKB = KnowledgeBase(5)
-    cell = Cell()
-    print(cell)
+    world = World(1)
+    # print(world.levels[0].percepts)
+    explorer = Explorer(world)
+    print(explorer.KB)
 
 
 Main()

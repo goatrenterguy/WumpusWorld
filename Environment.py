@@ -38,18 +38,17 @@ class WorldBuilder:
                 if self.board[y][x] == 'A':
                     self.agent = [x, y]
                 neighbors = self.neighbors(x, y)
-                if 'X' in neighbors:
+                if self.board[y][x] == 'X':
                     percept[3] = 'Bump'
                     perceptRow.append(percept)
-                    break
-                if 'W' in neighbors:
-                    percept[0] = 'Smell'
-                if 'P' in neighbors:
-                    percept[1] = 'Breeze'
-                if 'G' in neighbors:
-                    percept[2] = 'Glitter'
-
-                perceptRow.append(percept)
+                else:
+                    if 'W' in neighbors:
+                        percept[0] = 'Smell'
+                    if 'P' in neighbors:
+                        percept[1] = 'Breeze'
+                    if 'G' in neighbors:
+                        percept[2] = 'Glitter'
+                    perceptRow.append(percept)
             board.append(perceptRow)
         self.percepts = board
 
@@ -86,6 +85,7 @@ class WorldBuilder:
             y = random.randint(0, self.size - 1)
             if self.board[y][x] == ' ' and y != 0 and x != 0:
                 self.board[y][x] = "A"
+                self.agent = [x, y]
                 break
 
     # Randomly place wumpus on level (only one?)
