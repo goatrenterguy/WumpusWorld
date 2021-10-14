@@ -107,11 +107,29 @@ class Explorer:
 
 
 # KnowledgeBase Object
-# TODO: Need to add time
 class KnowledgeBase:
     def __init__(self, levelSize):
         # self.Clauses = [[Cell] * levelSize for i in range(levelSize)]
         self.clauses = []
+        # Add rules to the knowledge base. Rules needed:
+        # (~sml(cell) | wmp(cell.n()))
+        # (~sml(cell) | wmp(cell.e()))
+        # (~sml(cell) | wmp(cell.s()))
+        # (~sml(cell) | wmp(cell.w()))
+        # (~brz(cell) | pit(cell.n()))
+        # (~brz(cell) | pit(cell.e()))
+        # (~brz(cell) | pit(cell.s()))
+        # (~brz(cell) | pit(cell.w()))
+        # (~glt(cell) | gld(cell.n()))
+        # (~glt(cell) | gld(cell.e()))
+        # (~glt(cell) | gld(cell.s()))
+        # (~glt(cell) | gld(cell.w()))
+        # (~bump(cell) | wall(cell))
+        # (~wall(cell) | bump(cell))
+        # (~safe(cell) | ~wmp(cell))
+        # (~safe(cell) | ~pit(cell))
+        # - if visited(cell) then safe(cell)
+        # - if number of Scream(Cell) == number of arrows then all wumpus are dead and we can treat them as walls
         self.levelSize = levelSize
 
     # Custom print statement
