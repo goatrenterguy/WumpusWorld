@@ -30,6 +30,7 @@ class Explorer:
         self.KB = None
         self.KArchive = []
         self.runner()
+        self.map = None
 
     # Runner for explorer
     def runner(self):
@@ -98,6 +99,39 @@ class Explorer:
     # Runner for the agent to find the gold
     def findGold(self):
         self.perceive()
+        while self.alive and not self.hasGold:
+            if self.direction == 'South':
+                self.KB
+            elif self.direction == 'North':
+                self.location[1] -= 1
+            elif self.direction == 'East':
+                self.location[0] += 1
+            elif self.direction == 'West':
+                self.location[0] -= 1
+
+            pass
+            '''
+            if self.kb.percept_here==bump:
+                if (cell to right is unvisited):
+                    turn right
+                elif (cell to left is unvisited):
+                    turn left
+                elif (cell to bottom is unvisited):
+                    turn around
+            else:
+                if findUnvisitedCells():
+                    if unvisitedCell isSafe():
+                        turn/move to unvisitedCell
+            else:
+                findSafeCell()
+            
+            if self.kb.perceptatcell is bump, turn to safe direction in knowledge base
+            if cell in front is safe, self.moveForward()
+            else if cell to the left is safe, self.turnleft()
+            else if cell to right is safe, self.turnright()
+            else if no cells safe, backtrack?
+            '''
+
         # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors
         # and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
         #     Record percepts and see if we can make any new inferences in KB
