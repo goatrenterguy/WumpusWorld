@@ -165,6 +165,14 @@ class KnowledgeBase:
         # - if visited(cell) then safe(cell)
         # - if number of Scream(Cell) == number of arrows then all wumpus are dead and we can treat them as walls
         self.levelSize = levelSize
+        # Add non unified rules
+        self.clauses.append(And(And(Glitter(Cell("x", "y + 1")), Glitter(Cell("x", "y - 1"))),
+                                And(Glitter(Cell("x + 1", "y")), Glitter(Cell("x - 1", "y")))))
+        self.clauses.append(Or(Or(Not(Smell(Cell("x", "y + 1"))), Not(Smell(Cell("x", "y - 1")))),
+                               Or(Not(Smell(Cell("x + 1", "y"))), Not(Smell(Cell("x - 1", "y"))))))
+        self.clauses.append(Or(Or(Not(Breeze(Cell("x", "y + 1"))), Not(Breeze(Cell("x", "y - 1")))),
+                               Or(Not(Breeze(Cell("x + 1", "y"))), Not(Breeze(Cell("x - 1", "y"))))))
+        self.clauses.append(And(Not(Wumpus(Cell("x", "y"))), Not(Pit(Cell("x", "y")))))
 
     # Custom print statement
     def __repr__(self):
@@ -236,6 +244,7 @@ class KnowledgeBase:
         left = Not(Smell(Cell(cell.x - 1, cell.y)))
         right = Not(Smell(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
+        print(clause)
         return clause
 
     # Infer Pits
@@ -246,6 +255,7 @@ class KnowledgeBase:
         left = Not(Pit(Cell(cell.x - 1, cell.y)))
         right = Not(Pit(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
+        print(clause)
         return clause
 
     # Infer Gold
@@ -256,6 +266,7 @@ class KnowledgeBase:
         left = Glitter(Cell(cell.x - 1, cell.y))
         right = Glitter(Cell(cell.x + 1, cell.y))
         clause = And(And(up, down), And(left, right))
+        print(clause)
         return clause
 
     # Scream rules
@@ -268,7 +279,7 @@ class KnowledgeBase:
         # Unify into rule
         rule = Or(Not(Wumpus(cell)), Not(Pit(cell)))
         # Resolve Not(Wumpus(cell) and Not(Pit(cell)
-        clause = Or(self.genNotWumpusRule(cell), self.genNotPitRule(cell))
+        clause = And(self.genNotWumpusRule(cell), self.genNotPitRule(cell))
         return rule, clause
 
     # Ask for if the input coordinates are safe

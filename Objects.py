@@ -85,7 +85,7 @@ class Glitter(Constant):
         self.cell = cell
 
     def __repr__(self):
-        return "Scream(" + repr(self.cell) + ")"
+        return "Glitter(" + repr(self.cell) + ")"
 
     def __eq__(self, other):
         if isinstance(other, Glitter):
