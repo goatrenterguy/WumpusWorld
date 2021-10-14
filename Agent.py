@@ -36,7 +36,8 @@ class Explorer:
         for level in self.world.levels:
             self.currentLevel = level
             self.location = level.agent
-            self.KB = KnowledgeBase(level.size)
+            self.map = [[' '] * level.size for i in range(level.size)]
+            self.KB = KnowledgeBase()
             self.findGold()
             self.KArchive.append(self.KB)
 
@@ -84,8 +85,9 @@ class Explorer:
             self.hasGold = True
         else:
             # Tell the KB the percepts placeholder fact entered
-            self.KB.tell(self.location[0], self.location[1],
-                         self.currentLevel.percepts[self.location[1]][self.location[0]])
+            self.KB.tellPercept(self.location[0], self.location[1],
+                                self.currentLevel.percepts[self.location[1]][self.location[0]])
+            self.map[self.location[1]][self.location[0]] = "V"
         return True
 
     # Turn the explorer
@@ -102,7 +104,6 @@ class Explorer:
         # If has gold exit
         # If wumpus known and have arrows kill
         # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
-        pass
 
 
 # KnowledgeBase Object
@@ -123,49 +124,100 @@ class KnowledgeBase:
         self.clauses.append(clause)
 
     def tellPercept(self, x, y, percepts: list):
-        # TODO: Find a way we want to store knowledge in KB. Can we save them as objects and create and object for
-        #  cell that contains its attributes i.e smell, explored etc or does it have to be strings / sentences. Can
-        #  we have a KB that stores the strings and then an actual object actual object that stores the data and what
-        #  they mean? Can we use a dictionary called as the KB and have sub dictionaries like smell that have all the
-        #  cells we know have a smell?
         cell = Cell(x, y)
         if "Smell" in percepts:
             self.clauses.append(Smell(cell))
+            self.inferWumpus(cell)
         if "Breeze" in percepts:
             self.clauses.append(Breeze(cell))
+            self.inferPits(cell)
         if "Glitter" in percepts:
             self.clauses.append(Glitter(cell))
+            self.inferGold(cell)
         if "Bump" in percepts:
             self.clauses.append(Bump(cell))
         if "Scream" in percepts:
             self.clauses.append(Scream(cell))
 
-    # Check if cell is wumpus
-    def isWumpus(self, x, y):
-        # Check if in Clauses
-        # Assume cell is not safe
-        # If cell is not safe then there cant be any neighbor that doesnt have a smell
+    # Resolve first order logic
+    def BCResolution(self, q):
+        if isinstance(q, Brackets):
+            return self.BCResolution(q.clause)
+        elif isinstance(q, Or):
+            lhs = self.BCResolution(q.lhs)
+            rhs = self.BCResolution(q.rhs)
+            test = lhs or rhs
+            return lhs or rhs
+        elif isinstance(q, And):
+            return self.BCResolution(q.lhs) and self.BCResolution(q.rhs)
+        elif isinstance(q, Not) and not isinstance(q.clause, Operator):
+            return not self.BCResolution(q.clause)
+        elif isinstance(q, Not) and self.findInClauses(q.clause) and self.findInClauses(Visited(q.cell)):
+            return False
+        elif isinstance(q, Constant) and not self.findInClauses(q) and self.findInClauses(Visited(q.cell)):
+            return False
+        else:
+            return True
+
+    # For some reason the operator "in" did not want to cooperate with out objects so this function checks if the
+    # constant is in our clauses
+    def findInClauses(self, constant):
+        for c in self.clauses:
+            if c == constant:
+                return True
+        return False
+
+    # Infer Wumpus
+    def inferNotWumpus(self, cell):
+        # Unify the percept (Smell(Cell)) with the
+        # rule (not(Smell(Cell)) || Wumpus(Adjacent(Cell)))
+
+        # Get all Smell(Cell) predicates in the knowledge base?
+        #
+        # for clause in self.clauses:
+        #   for sub in clause:
+        #       if isInstance(sub, )
+        up = Not(Smell(Cell(cell.x, cell.y - 1)))
+        down = Not(Smell(Cell(cell.x, cell.y + 1)))
+        left = Not(Smell(Cell(cell.x - 1, cell.y)))
+        right = Not(Smell(Cell(cell.x - 1, cell.y)))
+        clause = Or(Or(up, down), Or(left, right))
+        if not self.findInClauses(clause):
+            self.clauses.append(clause)
+
+    # Infer Pits
+    def inferPits(self, cell):
+        up = Pit(Cell(cell.x, cell.y - 1))
+        down = Pit(Cell(cell.x, cell.y + 1))
+        left = Pit(Cell(cell.x - 1, cell.y))
+        right = Pit(Cell(cell.x + 1), cell.y)
+        clause = Or(Or(up, down), Or(left, right))
+        if not self.findInClauses(clause):
+            self.clauses.append(clause)
+
+    # Infer Gold
+    def inferGold(self, cell):
+        up = Gold(Cell(cell.x, cell.y - 1))
+        down = Pit(Cell(cell.x, cell.y + 1))
+        left = Pit(Cell(cell.x - 1, cell.y))
+        right = Pit(Cell(cell.x + 1), cell.y)
+        clause = Or(Or(up, down), Or(left, right))
+        if not self.findInClauses(clause):
+            self.clauses.append(clause)
+
+    # Infer Gold
+    def inferScream(self, cell):
         pass
 
-    # Rule for if the cell is a pit
-    def isPit(self, x, y):
-        # Check if in Clauses
-        # Assume cell is not safe
-        # If the cell is not safe then there cant be any neighbors with a breeze
-        pass
+    # Infer if cell is safe
+    def inferSafe(self, cell):
+        # Cell is safe if not wumpus or not pit or not obs
+        for c in self.clauses:
+            pass
 
-    # Rule for if the cell is a gold
-    def isGold(self, x, y):
-        # Check if in Clauses
-        # Assume cell is not safe
-        # If the cell is not gold then there cant be any neighbors with a glitter
-        pass
-
-    def isSafe(self, x, y):
+    def ask(self, x, y):
         # Check KB if safe if Safe([x,y]) then return safe if unknown check possibilities i.e check neighbors for
         # smells and see if we can infer if there is a wumpus using proof by contradiction
-        scent, breeze, glitter, bump, scream = True
-
         pass
 
 
@@ -173,14 +225,30 @@ class Main:
     # world = World(1)
     # print(world.levels[0].percepts)
     # explorer = Explorer(world)
-    # print(explorer.KB)
+    # print(explorer.KArchive)
     KB = KnowledgeBase(5)
     cell = Cell(1, 1)
-    breeze = Breeze(cell)
-    smell = Smell(cell)
-    a = Or(breeze, smell)
-    KB.tell(a)
-    print(KB)
+    test = Cell(1, 2)
+    # KB.tell(Smell(test))
+    KB.tell(Visited(test))
+    # KB.tell(Wumpus(test))
+    # Test for if cell is NOT wumpus
+    up = Not(Smell(cell.n()))
+    down = Not(Smell(cell.s()))
+    left = Not(Smell(cell.w()))
+    right = Not(Smell(cell.e()))
+    clause = Or(Or(up, down), Or(left, right))
+
+    # Test for if cell IS wumpus
+    # up = Smell(cell.n())
+    # down = Smell(cell.s())
+    # left = Smell(cell.w())
+    # right = Smell(cell.e())
+    # clause = And(And(up, down), And(left, right))
+    print(clause)
+    print(KB.clauses)
+    # print(c for c in KB.resolve(clause))
+    print(KB.BCResolution(clause))
 
 
 Main()
