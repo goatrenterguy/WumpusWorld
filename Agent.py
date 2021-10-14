@@ -114,48 +114,57 @@ class KnowledgeBase:
         self.clauses = []
         self.levelSize = levelSize
 
+    # Custom print statement
     def __repr__(self):
         s = "Knowledge Base:\n"
         for claus in self.clauses:
             s += "\t" + str(claus) + "\n"
         return s + "+-----------------------------------------------------------------+\n"
 
+    # Generic tell that adds the clause to clauses mostly used for testing
     def tell(self, clause):
         self.clauses.append(clause)
 
+    # Add percepts given by agent to KB
     def tellPercept(self, x, y, percepts: list):
         cell = Cell(x, y)
-        if "Smell" in percepts:
+        if "Smell" in percepts and not self.findInClauses(Smell(cell)):
             self.clauses.append(Smell(cell))
-            self.inferWumpus(cell)
-        if "Breeze" in percepts:
+        if "Breeze" in percepts and not self.findInClauses(Breeze(cell)):
             self.clauses.append(Breeze(cell))
-            self.inferPits(cell)
-        if "Glitter" in percepts:
+        if "Glitter" in percepts and not self.findInClauses(Glitter(cell)):
             self.clauses.append(Glitter(cell))
-            self.inferGold(cell)
-        if "Bump" in percepts:
+        if "Bump" in percepts and not self.findInClauses(Bump(cell)):
             self.clauses.append(Bump(cell))
-        if "Scream" in percepts:
+        if "Scream" in percepts and not self.findInClauses(Scream(cell)):
             self.clauses.append(Scream(cell))
+        if not self.findInClauses(Visited(cell)):
+            self.clauses.append(Visited(cell))
 
     # Resolve first order logic
     def BCResolution(self, q):
+        # Check if in brackets and resolve what is in brackets separately
         if isinstance(q, Brackets):
             return self.BCResolution(q.clause)
+        # Check if an or statement and resolve left and right hand and or the results
         elif isinstance(q, Or):
             lhs = self.BCResolution(q.lhs)
             rhs = self.BCResolution(q.rhs)
             test = lhs or rhs
             return lhs or rhs
+        # Check if an And statement and evaluates the lhs and rhs and "and" the results together
         elif isinstance(q, And):
             return self.BCResolution(q.lhs) and self.BCResolution(q.rhs)
+        # Checks if is a Not and the clause is a statement then resolves statement
         elif isinstance(q, Not) and not isinstance(q.clause, Operator):
             return not self.BCResolution(q.clause)
-        elif isinstance(q, Not) and self.findInClauses(q.clause) and self.findInClauses(Visited(q.cell)):
+        # Checks if a Not operator and if clause is a constant. checks if it finds it in our existing clauses if it does returns false
+        elif isinstance(q, Not) and self.findInClauses(q.clause):
             return False
+        # Checks if a constant and looks if its is not in
         elif isinstance(q, Constant) and not self.findInClauses(q) and self.findInClauses(Visited(q.cell)):
             return False
+        # Otherwise we return True because we have nothing that contradicts it
         else:
             return True
 
@@ -168,87 +177,72 @@ class KnowledgeBase:
         return False
 
     # Infer Wumpus
-    def inferNotWumpus(self, cell):
-        # Unify the percept (Smell(Cell)) with the
-        # rule (not(Smell(Cell)) || Wumpus(Adjacent(Cell)))
-
-        # Get all Smell(Cell) predicates in the knowledge base?
-        #
-        # for clause in self.clauses:
-        #   for sub in clause:
-        #       if isInstance(sub, )
+    def genNotWumpusRule(self, cell):
+        # resolve and unify Not(Wumpus(Cell))
         up = Not(Smell(Cell(cell.x, cell.y - 1)))
         down = Not(Smell(Cell(cell.x, cell.y + 1)))
         left = Not(Smell(Cell(cell.x - 1, cell.y)))
-        right = Not(Smell(Cell(cell.x - 1, cell.y)))
+        right = Not(Smell(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
-        if not self.findInClauses(clause):
-            self.clauses.append(clause)
+        return clause
 
     # Infer Pits
-    def inferPits(self, cell):
-        up = Pit(Cell(cell.x, cell.y - 1))
-        down = Pit(Cell(cell.x, cell.y + 1))
-        left = Pit(Cell(cell.x - 1, cell.y))
-        right = Pit(Cell(cell.x + 1), cell.y)
+    def genNotPitRule(self, cell):
+        # resolve and unify Not(Pit(Cell))
+        up = Not(Pit(Cell(cell.x, cell.y - 1)))
+        down = Not(Pit(Cell(cell.x, cell.y + 1)))
+        left = Not(Pit(Cell(cell.x - 1, cell.y)))
+        right = Not(Pit(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
-        if not self.findInClauses(clause):
-            self.clauses.append(clause)
+        return clause
 
     # Infer Gold
-    def inferGold(self, cell):
-        up = Gold(Cell(cell.x, cell.y - 1))
-        down = Pit(Cell(cell.x, cell.y + 1))
-        left = Pit(Cell(cell.x - 1, cell.y))
-        right = Pit(Cell(cell.x + 1), cell.y)
-        clause = Or(Or(up, down), Or(left, right))
-        if not self.findInClauses(clause):
-            self.clauses.append(clause)
+    def genGoldRule(self, cell):
+        # resolve and unify Not(Gold(Cell))
+        up = Glitter(Cell(cell.x, cell.y - 1))
+        down = Glitter(Cell(cell.x, cell.y + 1))
+        left = Glitter(Cell(cell.x - 1, cell.y))
+        right = Glitter(Cell(cell.x + 1, cell.y))
+        clause = And(And(up, down), And(left, right))
+        return clause
 
-    # Infer Gold
+    # Scream rules
     def inferScream(self, cell):
         pass
 
     # Infer if cell is safe
-    def inferSafe(self, cell):
-        # Cell is safe if not wumpus or not pit or not obs
-        for c in self.clauses:
-            pass
+    def genSafeRule(self, cell):
+        # Cell is safe if not wumpus or not pit
+        # Unify into rule
+        rule = Or(Not(Wumpus(cell)), Not(Pit(cell)))
+        # Resolve Not(Wumpus(cell) and Not(Pit(cell)
+        clause = Or(self.genNotWumpusRule(cell), self.genNotPitRule(cell))
+        return rule, clause
 
-    def ask(self, x, y):
+    # Ask for if the input coordinates are safe
+    def askSafe(self, x, y):
         # Check KB if safe if Safe([x,y]) then return safe if unknown check possibilities i.e check neighbors for
         # smells and see if we can infer if there is a wumpus using proof by contradiction
-        pass
+        cell = Cell(x, y)
+        for clause in self.clauses:
+            if clause == Safe(cell):
+                return True
+        if self.BCResolution(self.genSafeRule(cell)[1]):
+            self.clauses.append(Safe(cell))
+            return True
+        return False
+
+    def askGold(self, x, y):
+        # Is gold if any of the neighbors dont have glitter
+        cell = Cell(x, y)
+        if self.BCResolution(self.genGoldRule(cell)):
+            self.clauses.append(Gold(cell))
+            return True
+        return False
 
 
 class Main:
-    # world = World(1)
-    # print(world.levels[0].percepts)
-    # explorer = Explorer(world)
-    # print(explorer.KArchive)
-    KB = KnowledgeBase(5)
-    cell = Cell(1, 1)
-    test = Cell(1, 2)
-    # KB.tell(Smell(test))
-    KB.tell(Visited(test))
-    # KB.tell(Wumpus(test))
-    # Test for if cell is NOT wumpus
-    up = Not(Smell(cell.n()))
-    down = Not(Smell(cell.s()))
-    left = Not(Smell(cell.w()))
-    right = Not(Smell(cell.e()))
-    clause = Or(Or(up, down), Or(left, right))
-
-    # Test for if cell IS wumpus
-    # up = Smell(cell.n())
-    # down = Smell(cell.s())
-    # left = Smell(cell.w())
-    # right = Smell(cell.e())
-    # clause = And(And(up, down), And(left, right))
-    print(clause)
-    print(KB.clauses)
-    # print(c for c in KB.resolve(clause))
-    print(KB.BCResolution(clause))
+    pass
 
 
 Main()
