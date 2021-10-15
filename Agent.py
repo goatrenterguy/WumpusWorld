@@ -52,7 +52,7 @@ class Explorer:
 
     # Move the explorer forward
     def moveForward(self):
-        self.action += 1
+        self.numActions += 1
         self.numCellsExplored += 1
         tempLocation = self.location.copy()
         if self.facing == 'South':
@@ -61,7 +61,7 @@ class Explorer:
             self.location[1] -= 1
         elif self.facing == 'East':
             self.location[0] += 1
-        elif self.direction == 'West':
+        elif self.facing == 'West':
             self.location[0] -= 1
         if not self.perceive():
             self.location = tempLocation
@@ -98,23 +98,21 @@ class Explorer:
 
     # Turn the explorer
     def turn(self, direction):
-        self.NumActions += 1
+        self.numActions += 1
         self.facing = direction
 
     # Runner for the agent to find the gold
     def findGold(self):
         self.perceive()
         while self.alive and not self.hasGold:
-            if self.direction == 'South':
-                self.KB
-            elif self.direction == 'North':
-                self.location[1] -= 1
-            elif self.direction == 'East':
-                self.location[0] += 1
-            elif self.direction == 'West':
-                self.location[0] -= 1
+            # Check if move forward is safe
+            if self.facing == "South":
+                front = [self.location[0]]
+            front = self.KB.askSafe()
 
-            pass
+            if self.numActions >= 1000:
+                self.alive = False
+
             '''
             if self.kb.percept_here==bump:
                 if (cell to right is unvisited):
