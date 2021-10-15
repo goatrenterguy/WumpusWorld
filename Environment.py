@@ -8,6 +8,7 @@ class WorldBuilder:
         self.percepts = None
         self.agent = None
         self.size = size
+        self.wumpi = 0
         self.difficulty = difficulty
         # TODO: Tweak values or create more control depending on size
         # Establish probabilities per difficulty
@@ -52,8 +53,7 @@ class WorldBuilder:
             board.append(perceptRow)
         self.percepts = board
 
-        # Get neighbors of on level level at x,y
-
+    # Get neighbors of level at x,y
     def neighbors(self, x, y):
         neighbors = []
         # Try west of x,y
@@ -88,17 +88,14 @@ class WorldBuilder:
                 self.agent = [x, y]
                 break
 
-    # Randomly place wumpus on level (only one?)
+    # Randomly place Wumpus on level
     def placeWumpus(self, probability: float):
-        # for x in range(self.size):
-        #     for y in range(self.size):
-        #         if self.board[y][x] == ' ' and random.random() < probability and (x != 0 or y != 0):
-        #             self.board[y][x] = 'W'
         while True:
             x = random.randint(0, self.size - 1)
             y = random.randint(0, self.size - 1)
             if self.board[y][x] == ' ' and y != 0 and x != 0:
                 self.board[y][x] = "W"
+                self.wumpi += 1
                 break
 
     # Randomly place pits on level
@@ -119,7 +116,7 @@ class WorldBuilder:
         while True:
             x = random.randint(0, self.size - 1)
             y = random.randint(0, self.size - 1)
-            if y != 0 and x != 0 and self.board[y][x] == ' ' :
+            if y != 0 and x != 0 and self.board[y][x] == ' ':
                 self.board[y][x] = "G"
                 break
 
