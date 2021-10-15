@@ -29,7 +29,7 @@ class Constant:
 
 
 class Visited(Constant):
-    def __init__(self, cell: Cell):
+    def __init__(self, cell):
         self.cell = cell
 
     def __repr__(self):

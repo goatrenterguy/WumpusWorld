@@ -1,5 +1,3 @@
-import copy
-
 from Environment import *
 from Objects import *
 
@@ -312,6 +310,7 @@ class ReactiveExplorer:
         self.numCellsExplored = 0
         self.numWumpusKilledBy = 0
         self.numActions = 0
+        self.totalNumActions = None
         self.alive = True
         self.hasGold = False
         self.arrows = 0
@@ -376,7 +375,7 @@ class ReactiveExplorer:
 
     # Utility method for moving the explorer forward
     def moveForward(self):
-        self.NumActions += 1
+        self.numActions += 1
         self.numCellsExplored += 1
         tempLocation = self.location.copy()
         if self.facing == 'South':
@@ -393,12 +392,12 @@ class ReactiveExplorer:
     # Utility method for turning the explorer
     # Takes the direction parameter and turns the agent to face that way
     def turn(self, direction):
-        self.NumActions += 1
+        self.numActions += 1
         self.facing = direction
 
     # Utility method for turning the agent to a random direction other than the direction it currently faces
     def turnRand(self):
-        self.NumActions += 1
+        self.numActions += 1
         if self.facing == 'South':
             self.facing = random.choice(('North', 'East', 'West'))
         elif self.facing == 'North':
@@ -410,16 +409,16 @@ class ReactiveExplorer:
 
     # Utility method for turning the agent to any of the four possible directions
     def turnRandOrStay(self):
-        self.NumActions += 1  # increment the action count
+        self.numActions += 1  # increment the action count
         lastDirection = self.facing  # store the direction the agent is currently facing
         self.facing = random.choice(('South', 'North', 'East', 'West'))  # face a new direction
         if self.facing == lastDirection:  # if facing the same direction as before
-            self.NumActions -= 1  # decrement the action counter because the agent didn't turn
+            self.numActions -= 1  # decrement the action counter because the agent didn't turn
 
     # Method for shooting an arrow in a straight line in front of the agent
     # Returns true if the arrow hits a Wumpus, and false if it doesn't
     def shootArrow(self):
-        self.NumActions += 1  # increment the action counter
+        self.numActions += 1  # increment the action counter
         self.arrows -= 1  # decrement the number of arrows
         if self.facing == 'South':
             for i in range(self.currentLevel.size - self.location[1]):  # iterate from to the edge of the board
@@ -542,6 +541,8 @@ class ReactiveExplorer:
             else:
                 self.turnRandOrStay()  # turn to a random direction
                 self.moveForward()  # enter the cell
+            if self.numActions >= 2000:
+                self.alive = False
 
 
 # KnowledgeBase Object
@@ -629,7 +630,8 @@ class KnowledgeBase:
         # Checks if is a Not and the clause is a statement then resolves statement
         elif isinstance(q, Not) and not isinstance(q.clause, Operator):
             return not self.BCResolution(q.clause)
-        # Checks if a Not operator and if clause is a constant. checks if it finds it in our existing clauses if it does returns false
+        # Checks if a Not operator and if clause is a constant. checks if it finds it in our existing clauses if it
+        # does returns false
         elif isinstance(q, Not) and self.findInClauses(q.clause) and self.findInClauses(Visited(q.cell)):
             return False
         # Checks if a constant and looks if its is not in
