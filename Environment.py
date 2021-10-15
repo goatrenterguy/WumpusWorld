@@ -14,10 +14,10 @@ class WorldBuilder:
         self.difficulties = {'easy': {'Pwumpus': .05, 'Ppit': .05, 'Pobs': .1},
                              'med': {'Pwumpus': .07, 'Ppit': .07, 'Pobs': .2},
                              'hard': {'Pwumpus': .1, 'Ppit': .11, 'Pobs': .3}}
+        self.placeObs(self.difficulties[difficulty]['Pobs'])
         self.placeGold()
         self.placeWumpus(self.difficulties[difficulty]['Pwumpus'])
         self.placePit(self.difficulties[difficulty]['Ppit'])
-        self.placeObs(self.difficulties[difficulty]['Pobs'])
         self.placeAgent()
         self.buildPercepts()
 
@@ -28,8 +28,7 @@ class WorldBuilder:
             strLevel += repr(lines) + "\n"
         return strLevel
 
-        # Build board of percepts based on
-
+    # Build board of percepts based on level
     def buildPercepts(self):
         board = []
         for y in range(len(self.board[0])):
@@ -39,18 +38,17 @@ class WorldBuilder:
                 if self.board[y][x] == 'A':
                     self.agent = [x, y]
                 neighbors = self.neighbors(x, y)
-                if 'X' in neighbors:
+                if self.board[y][x] == 'X':
                     percept[3] = 'Bump'
                     perceptRow.append(percept)
-                    break
-                if 'W' in neighbors:
-                    percept[0] = 'Smell'
-                if 'P' in neighbors:
-                    percept[1] = 'Breeze'
-                if 'G' in neighbors:
-                    percept[2] = 'Glitter'
-
-                perceptRow.append(percept)
+                else:
+                    if 'W' in neighbors:
+                        percept[0] = 'Smell'
+                    if 'P' in neighbors:
+                        percept[1] = 'Breeze'
+                    if 'G' in neighbors:
+                        percept[2] = 'Glitter'
+                    perceptRow.append(percept)
             board.append(perceptRow)
         self.percepts = board
 
@@ -87,6 +85,7 @@ class WorldBuilder:
             y = random.randint(0, self.size - 1)
             if self.board[y][x] == ' ' and y != 0 and x != 0:
                 self.board[y][x] = "A"
+                self.agent = [x, y]
                 break
 
     # Randomly place wumpus on level (only one?)
@@ -113,14 +112,14 @@ class WorldBuilder:
     def placeObs(self, probability):
         for x in range(self.size):
             for y in range(self.size):
-                if self.board[y][x] == ' ' and random.random() < probability and (x != 0 and y != 0):
+                if self.board[y][x] == ' ' and random.random() < probability and (x != 0 and y != 0) or x == 0 or y == 0 or x == self.size - 1 or y == self.size - 1:
                     self.board[y][x] = 'X'
 
     def placeGold(self):
         while True:
             x = random.randint(0, self.size - 1)
             y = random.randint(0, self.size - 1)
-            if y != 0 and x != 0:
+            if y != 0 and x != 0 and self.board[y][x] == ' ' :
                 self.board[y][x] = "G"
                 break
 
@@ -131,10 +130,9 @@ class World:
         self.levels = []
         self.percepts = []
         # Establish board sizes
-        self.sizes = [5, 10, 15, 20, 25]
+        self.sizes = [7, 12, 17, 22, 27]
         self.difficulties = ['easy', 'med', 'hard']
         self.buildLevels(levels)
-
 
     # Override default print
     def __repr__(self):
