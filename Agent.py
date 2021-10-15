@@ -38,6 +38,8 @@ class Explorer:
             self.alive = True
             # Reset the number of action for the level
             self.numActions = 0
+            # Initialize the number of arrows for the level
+            self.arrows = level.wumpi
             # Initialize a map that stores if we have visited a cell or not
             self.map = [[' '] * level.size for i in range(level.size)]
             # Initialize a knowledge base for the level
@@ -488,6 +490,7 @@ class Main:
     print(FOLExplorer.points)
     print(len(world.levels))
     print(str(FOLExplorer.numWumpusKilledBy + FOLExplorer.numPitsFallenIn))
+    print(FOLExplorer.KArchive)
 
 
 Main()
