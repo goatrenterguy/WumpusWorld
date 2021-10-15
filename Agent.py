@@ -53,7 +53,39 @@ class Explorer:
     # Shot arrow
     def shootArrow(self):
         if self.arrows != 0:
-            pass
+            print("shooting")
+            startX = self.location[0]
+            startY = self.location[1]
+            if self.facing == "South":
+                while startY != self.currentLevel.size:
+                    if self.currentLevel.board[startY][startX] == 'W':
+                        self.points += 100
+                        self.KB.tell(Scream)
+                        return
+                    startY += 1
+
+            elif self.facing == "North":
+                while startY != 0:
+                    if self.currentLevel.board[startY][startX] == 'W':
+                        self.points += 100
+                        self.KB.tell(Scream)
+                        return
+                    startY -= 1
+            elif self.facing == "East":
+                while startX != self.currentLevel.size:
+                    if self.currentLevel.board[startY][startX] == 'W':
+                        self.points += 100
+                        self.KB.tell(Scream)
+                        return
+                    startX += 1
+            elif self.facing == "West":
+                while startX != 0:
+                    if self.currentLevel.board[startY][startX] == 'W':
+                        self.points += 100
+                        self.KB.tell(Scream)
+                        return
+                    startX -= 1
+            self.arrows -= 1
 
     # Move the explorer forward
     def moveForward(self):
@@ -110,6 +142,8 @@ class Explorer:
             # Tell the KB the percepts placeholder fact entered
             self.KB.tellPercept(self.location[0], self.location[1],
                                 self.currentLevel.percepts[self.location[1]][self.location[0]])
+            if "Smell" in self.currentLevel.percepts[self.location[1]][self.location[0]]:
+                self.shootArrow()
             self.map[self.location[1]][self.location[0]] = "V"
         return True
 
