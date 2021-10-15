@@ -53,12 +53,11 @@ class Explorer:
     # Shot arrow
     def shootArrow(self):
         if self.arrows != 0:
-            print("shooting")
             startX = self.location[0]
             startY = self.location[1]
             if self.facing == "South":
                 while startY != self.currentLevel.size:
-                    if self.currentLevel.board[startY][startX] == 'W':
+                    if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
                         self.KB.tell(Scream)
                         return
@@ -66,21 +65,21 @@ class Explorer:
 
             elif self.facing == "North":
                 while startY != 0:
-                    if self.currentLevel.board[startY][startX] == 'W':
+                    if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
                         self.KB.tell(Scream)
                         return
                     startY -= 1
             elif self.facing == "East":
                 while startX != self.currentLevel.size:
-                    if self.currentLevel.board[startY][startX] == 'W':
+                    if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
                         self.KB.tell(Scream)
                         return
                     startX += 1
             elif self.facing == "West":
                 while startX != 0:
-                    if self.currentLevel.board[startY][startX] == 'W':
+                    if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
                         self.KB.tell(Scream)
                         return
@@ -524,7 +523,7 @@ class Main:
     print(FOLExplorer.points)
     print(len(world.levels))
     print(str(FOLExplorer.numWumpusKilledBy + FOLExplorer.numPitsFallenIn))
-    print(FOLExplorer.KArchive)
+    #print(FOLExplorer.KArchive)
 
 
 Main()
