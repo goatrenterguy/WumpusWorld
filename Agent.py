@@ -42,7 +42,7 @@ class Explorer:
             self.map = [[' '] * level.size for i in range(level.size)]
             self.KB = KnowledgeBase()
             self.findGold()
-            print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions))
+            # print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions))
             self.KArchive.append(self.KB)
 
     # Shot arrow
@@ -65,7 +65,6 @@ class Explorer:
             self.location[0] -= 1
         if not self.perceive():
             self.location = tempLocation
-        print(self.location)
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
@@ -106,88 +105,75 @@ class Explorer:
     def findGold(self):
         self.perceive()
         while self.alive and not self.hasGold:
-            # Check if move forward is safe
-            visitS = self.map[self.location[1] + 1][self.location[0]]
-            visitN = self.map[self.location[1] - 1][self.location[0]]
-            visitE = self.map[self.location[1]][self.location[0] + 1]
-            visitW = self.map[self.location[1]][self.location[0] - 1]
-            South = self.KB.askSafe(self.location[0], self.location[1] + 1) and not self.KB.askWall(self.location[0], self.location[1] + 1)
-            North = self.KB.askSafe(self.location[0], self.location[1] - 1) and not self.KB.askWall(self.location[0], self.location[1] - 1)
-            East = self.KB.askSafe(self.location[0] + 1, self.location[1]) and not self.KB.askWall(self.location[0] + 1, self.location[1])
-            West = self.KB.askSafe(self.location[0] - 1, self.location[1]) and not self.KB.askWall(self.location[0] - 1, self.location[1])
-
-            moved = False
-
-            if South and visitS == ' ' and self.facing == "South":
+            if self.facing == "South":
+                front = [self.location[0], self.location[1] + 1]
+                left = [self.location[0] + 1, self.location[1]]
+                right = [self.location[0] - 1, self.location[1]]
+                back = [self.location[0], self.location[1] - 1]
+            elif self.facing == "East":
+                front = [self.location[0] + 1, self.location[1]]
+                left = [self.location[0], self.location[1] - 1]
+                right = [self.location[0], self.location[1] + 1]
+                back = [self.location[0] - 1, self.location[1]]
+            elif self.facing == "West":
+                front = [self.location[0] - 1, self.location[1]]
+                left = [self.location[0], self.location[1] + 1]
+                right = [self.location[0], self.location[1] - 1]
+                back = [self.location[0] + 1, self.location[1]]
+            elif self.facing == "North":
+                front = [self.location[0], self.location[1] - 1]
+                left = [self.location[0] - 1, self.location[1]]
+                right = [self.location[0] + 1, self.location[1]]
+                back = [self.location[0], self.location[1] + 1]
+            # Ask directions
+            frontSafe = self.KB.askSafe(front[0], front[1]) and not self.KB.askWall(front[0], front[1])
+            leftSafe = self.KB.askSafe(left[0], left[1]) and not self.KB.askWall(left[0], left[1])
+            rightSafe = self.KB.askSafe(right[0], right[1]) and not self.KB.askWall(right[0], right[1])
+            backSafe = self.KB.askSafe(back[0], back[1]) and not self.KB.askWall(back[0], back[1])
+            if frontSafe:
                 self.moveForward()
-                moved = True
-            elif North and visitN == ' ' and self.facing == "North":
-                self.moveForward()
-                moved = True
-            elif East and visitE == ' ' and self.facing == "East":
-                self.moveForward()
-                moved = True
-            elif West and visitW == ' ' and self.facing == 'West':
-                self.moveForward()
-                moved = True
-
-            if South and not moved:
-                if self.facing == "South":
-                    self.moveForward()
-                    moved = True
-            elif North and not moved:
-                if self.facing == "North":
-                    self.moveForward()
-                    moved = True
-            elif East and not moved:
-                if self.facing == "East":
-                    self.moveForward()
-                    moved = True
-            elif West and not moved:
-                if self.facing == "West":
-                    self.moveForward()
-                    moved = True
-
-            if not moved:
-                if South:
-                    self.turn("South")
-                elif North:
-                    self.turn("North")
-                elif East:
-                    self.turn("East")
-                elif West:
-                    self.turn("West")
+            else:
+                safe = []
+                if leftSafe:
+                    safe.append("Left")
+                if rightSafe:
+                    safe.append("Right")
+                if backSafe:
+                    safe.append("Back")
+                try:
+                    choice = random.choice(safe)
+                except IndexError:
+                    # print("Stuck")
+                    break
+                if choice == "Left":
+                    if self.facing == "South":
+                        self.turn("East")
+                    elif self.facing == "East":
+                        self.turn("North")
+                    elif self.facing == "West":
+                        self.turn("South")
+                    elif self.facing == "North":
+                        self.turn("West")
+                elif choice == "Right":
+                    if self.facing == "South":
+                        self.turn("West")
+                    elif self.facing == "East":
+                        self.turn("South")
+                    elif self.facing == "West":
+                        self.turn("North")
+                    elif self.facing == "North":
+                        self.turn("East")
+                elif choice == "Back":
+                    if self.facing == "South":
+                        self.turn("North")
+                    elif self.facing == "East":
+                        self.turn("West")
+                    elif self.facing == "West":
+                        self.turn("North")
+                    elif self.facing == "North":
+                        self.turn("South")
             if self.numActions >= 1000:
                 self.alive = False
-
-            '''
-            if self.kb.percept_here==bump:
-                if (cell to right is unvisited):
-                    turn right
-                elif (cell to left is unvisited):
-                    turn left
-                elif (cell to bottom is unvisited):
-                    turn around
-            else:
-                if findUnvisitedCells():
-                    if unvisitedCell isSafe():
-                        turn/move to unvisitedCell
-            else:
-                findSafeCell()
-            
-            if self.kb.perceptatcell is bump, turn to safe direction in knowledge base
-            if cell in front is safe, self.moveForward()
-            else if cell to the left is safe, self.turnleft()
-            else if cell to right is safe, self.turnright()
-            else if no cells safe, backtrack?
-            '''
-
-        # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors
-        # and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
-        #     Record percepts and see if we can make any new inferences in KB
-        # If has gold exit
-        # If wumpus known and have arrows kill
-        # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
 
 
 class ReactiveExplorer():
@@ -252,8 +238,7 @@ class ReactiveExplorer():
         adjacent.append(self.map[self.location[0] - 1][self.location[1]])  # West
 
     def findGold(self):
-        while self.alive and not self.hasGold:
-            self.getCells()
+        pass
 
     '''
     say that a cell and its neighbors are safe if there are no danger percepts when you get a danger percept
@@ -322,6 +307,7 @@ class KnowledgeBase:
             self.clauses.append(Glitter(cell))
         if "Bump" in percepts and not self.findInClauses(Bump(cell)):
             self.clauses.append(Bump(cell))
+            return
         if "Scream" in percepts and not self.findInClauses(Scream(cell)):
             self.clauses.append(Scream(cell))
         if not self.findInClauses(Visited(cell)):
@@ -345,7 +331,7 @@ class KnowledgeBase:
         elif isinstance(q, Not) and not isinstance(q.clause, Operator):
             return not self.BCResolution(q.clause)
         # Checks if a Not operator and if clause is a constant. checks if it finds it in our existing clauses if it does returns false
-        elif isinstance(q, Not) and self.findInClauses(q.clause):
+        elif isinstance(q, Not) and self.findInClauses(q.clause) and self.findInClauses(Visited(q.cell)):
             return False
         # Checks if a constant and looks if its is not in
         elif isinstance(q, Constant) and not self.findInClauses(q) and self.findInClauses(Visited(q.cell)):
@@ -375,10 +361,10 @@ class KnowledgeBase:
     # Infer Pits
     def genNotPitRule(self, cell):
         # resolve and unify Not(Pit(Cell))
-        up = Not(Pit(Cell(cell.x, cell.y - 1)))
-        down = Not(Pit(Cell(cell.x, cell.y + 1)))
-        left = Not(Pit(Cell(cell.x - 1, cell.y)))
-        right = Not(Pit(Cell(cell.x + 1, cell.y)))
+        up = Not(Breeze(Cell(cell.x, cell.y - 1)))
+        down = Not(Breeze(Cell(cell.x, cell.y + 1)))
+        left = Not(Breeze(Cell(cell.x - 1, cell.y)))
+        right = Not(Breeze(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
         return clause
 
@@ -436,10 +422,13 @@ class KnowledgeBase:
 
 
 class Main:
-    world = World(1)
+    world = World(10)
+    # world.levels = [world.levels[0]]
     # print(world.levels[0])
     FOLExplorer = Explorer(world)
-    print(FOLExplorer.KArchive)
+    print(FOLExplorer.points)
+    print(len(world.levels))
+    print(str(FOLExplorer.numWumpusKilledBy + FOLExplorer.numPitsFallenIn))
 
 
 Main()

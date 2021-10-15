@@ -119,7 +119,7 @@ class WorldBuilder:
         while True:
             x = random.randint(0, self.size - 1)
             y = random.randint(0, self.size - 1)
-            if y != 0 and x != 0 and self.board[y][x] == ' ' :
+            if y != 0 and x != 0 and self.board[y][x] == ' ':
                 self.board[y][x] = "G"
                 break
 
