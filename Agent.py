@@ -4,11 +4,20 @@ from Environment import *
 from Objects import *
 
 
+def printVariables(agent):
+    print("Points: " + str(agent.points)
+          + " | Wumpus Killed: " + str(agent.numWumpusKilled)
+          + " | Cells Explored: " + str(agent.numCellsExplored)
+          + " | Total Actions: " + str(agent.totalNumActions)
+          + " | Times killed by wumpus: " + str(agent.numWumpusKilledBy) + " | Times killed by pit: " + str(agent.numPitsFallenIn)
+          + " | Times gold found: " + str(agent.numGold) + " | Deaths: " + str(agent.numWumpusKilledBy + agent.numPitsFallenIn))
+    print("Number of levels: " + str(len(agent.world.levels)))
+
 def printExplorerLocation(board, x, y):
     board[y][x] = 'a'
     for row in board:
         print(row)
-    print("\n+----------------+\n")
+    print("\n+----------------+\n", end="\r")
 
 
 # FOL reactive explorer
@@ -26,6 +35,7 @@ class Explorer:
         self.numCellsExplored = 0
         self.numWumpusKilledBy = 0
         self.numActions = 0
+        self.totalNumActions = 0
         self.alive = None
         self.hasGold = None
         self.arrows = 0
@@ -55,8 +65,10 @@ class Explorer:
             self.KB = KnowledgeBase()
             # Start runner for instructions to find gold
             self.findGold()
-            print("Level: \n" + str(level) + "Points: " + str(self.points) + " Moves: " + str(self.numActions) + "\nEND LEVEL\n")
+            # print("Level: \n" + str(level) + "Points: " + str(self.points) + " Moves: " + str(self.numActions) + "\nEND LEVEL\n")
             self.KArchive.append(self.KB)
+            # Increment the total number of moves
+            self.totalNumActions += self.numActions
 
     # Shoot arrow
     def shootArrow(self):
@@ -113,7 +125,7 @@ class Explorer:
             self.location[0] -= 1
         if not self.perceive():
             self.location = tempLocation
-        printExplorerLocation(copy.deepcopy(self.currentLevel.board), self.location[0], self.location[1])
+        # printExplorerLocation(copy.deepcopy(self.currentLevel.board), self.location[0], self.location[1])
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
@@ -247,7 +259,7 @@ class Explorer:
                 # If it fails to make a choice then none of the neighboring cells of the agent are safe thus the
                 # agent is stuck
                 except IndexError:
-                    print("Stuck")
+                    # print("Stuck")
                     break
                 # Converter of the choice to which direction to turn to depending on agents current heading
                 if choice == "Left":
@@ -715,9 +727,11 @@ class Main:
     # ReactExplorer = ReactiveExplorer(world)
     # print(ReactExplorer)
     folExplorer = Explorer(world)
-    print("Points: " + str(folExplorer.points) + " Wumpus Killed: " + str(folExplorer.numWumpusKilled))
-    print("Number of levels: " + str(len(folExplorer.world.levels)))
-    print("Deaths: " + str(folExplorer.numWumpusKilledBy + folExplorer.numPitsFallenIn))
+    goldFish = ReactiveExplorer(world)
+    print("Reasoning Agent:")
+    printVariables(folExplorer)
+    print("Reactive Agent:")
+    printVariables(goldFish)
 
 
 Main()
