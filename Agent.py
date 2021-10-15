@@ -1,5 +1,14 @@
+import copy
+
 from Environment import *
 from Objects import *
+
+
+def printExplorerLocation(board, x, y):
+    board[y][x] = 'a'
+    for row in board:
+        print(row)
+    print("\n+----------------+\n")
 
 
 # FOL reactive explorer
@@ -46,7 +55,7 @@ class Explorer:
             self.KB = KnowledgeBase()
             # Start runner for instructions to find gold
             self.findGold()
-            print("Level: \n" + str(level) + "\nPoints: " + str(self.points))
+            print("Level: \n" + str(level) + "Points: " + str(self.points) + " Moves: " + str(self.numActions) + "\nEND LEVEL\n")
             self.KArchive.append(self.KB)
 
     # Shoot arrow
@@ -58,6 +67,7 @@ class Explorer:
                 while startY != self.currentLevel.size:
                     if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
+                        self.numWumpusKilled += 1
                         self.KB.tell(Scream)
                         return
                     startY += 1
@@ -66,6 +76,7 @@ class Explorer:
                 while startY != 0:
                     if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
+                        self.numWumpusKilled += 1
                         self.KB.tell(Scream)
                         return
                     startY -= 1
@@ -73,6 +84,7 @@ class Explorer:
                 while startX != self.currentLevel.size:
                     if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
+                        self.numWumpusKilled += 1
                         self.KB.tell(Scream)
                         return
                     startX += 1
@@ -80,6 +92,7 @@ class Explorer:
                 while startX != 0:
                     if str(self.currentLevel.board[startY][startX]) == 'W':
                         self.points += 100
+                        self.numWumpusKilled += 1
                         self.KB.tell(Scream)
                         return
                     startX -= 1
@@ -87,7 +100,7 @@ class Explorer:
 
     # Move the explorer forward
     def moveForward(self):
-        self.NumActions += 1
+        self.numActions += 1
         self.numCellsExplored += 1
         tempLocation = self.location.copy()
         if self.facing == 'South':
@@ -100,6 +113,7 @@ class Explorer:
             self.location[0] -= 1
         if not self.perceive():
             self.location = tempLocation
+        printExplorerLocation(copy.deepcopy(self.currentLevel.board), self.location[0], self.location[1])
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
@@ -150,98 +164,126 @@ class Explorer:
         self.perceive()
         # Continue exploring while we are a live or dont have the gold
         while self.alive and not self.hasGold:
-            # Check if move forward is safe
-            visitS = self.map[self.location[1] + 1][self.location[0]]
-            visitN = self.map[self.location[1] - 1][self.location[0]]
-            visitE = self.map[self.location[1]][self.location[0] + 1]
-            visitW = self.map[self.location[1]][self.location[0] - 1]
-            safeS = self.KB.askSafe(self.location[0], self.location[1] + 1)
-            safeN = self.KB.askSafe(self.location[0], self.location[1] - 1)
-            safeE = self.KB.askSafe(self.location[0] + 1, self.location[1])
-            safeW = self.KB.askSafe(self.location[0] - 1, self.location[1])
-            wallS = self.KB.askWall(self.location[0], self.location[1] + 1)
-            wallN = self.KB.askWall(self.location[0], self.location[1] - 1)
-            wallE = self.KB.askWall(self.location[0] + 1, self.location[1])
-            wallW = self.KB.askWall(self.location[0] - 1, self.location[1])
-
-            moved = False
-
-            if safeS and visitS == ' ' and wallS:
-                if self.facing == "South":
-                    self.moveForward()
-                    moved = True
-            elif safeN and visitN == ' ' and wallN:
-                if self.facing == "North":
-                    self.moveForward()
-                    moved = True
-            elif safeE and visitE == ' ' and wallE:
-                if self.facing == "East":
-                    self.moveForward()
-                    moved = True
-            elif safeW and visitW == ' ' and wallW:
-                if self.facing == "West":
-                    self.moveForward()
-                    moved = True
-
-            if safeS:
-                if self.facing == "South":
-                    self.moveForward()
-                    moved = True
-            elif safeN:
-                if self.facing == "North":
-                    self.moveForward()
-                    moved = True
-            elif safeE:
-                if self.facing == "East":
-                    self.moveForward()
-                    moved = True
-            elif safeW:
-                if self.facing == "West":
-                    self.moveForward()
-                    moved = True
-
-            if not moved:
-                if safeS:
-                    self.turn("South")
-                elif safeN:
-                    self.turn("North")
-                elif safeE:
-                    self.turn("East")
-                elif safeW:
-                    self.turn("West")
-            if self.NumActions >= 1000:
+            # If statements for defining what left, right, front, and back are in terms of the agent's current cell and
+            # which direction the agent is facing
+            if self.facing == "South":
+                front = [self.location[0], self.location[1] + 1]
+                left = [self.location[0] + 1, self.location[1]]
+                right = [self.location[0] - 1, self.location[1]]
+                back = [self.location[0], self.location[1] - 1]
+            elif self.facing == "East":
+                front = [self.location[0] + 1, self.location[1]]
+                left = [self.location[0], self.location[1] - 1]
+                right = [self.location[0], self.location[1] + 1]
+                back = [self.location[0] - 1, self.location[1]]
+            elif self.facing == "West":
+                front = [self.location[0] - 1, self.location[1]]
+                left = [self.location[0], self.location[1] + 1]
+                right = [self.location[0], self.location[1] - 1]
+                back = [self.location[0] + 1, self.location[1]]
+            elif self.facing == "North":
+                front = [self.location[0], self.location[1] - 1]
+                left = [self.location[0] - 1, self.location[1]]
+                right = [self.location[0] + 1, self.location[1]]
+                back = [self.location[0], self.location[1] + 1]
+            # Check if any of the cells around us are known to be safe or not a wall
+            frontSafe = self.KB.askSafe(front[0], front[1]) and not self.KB.askWall(front[0], front[1])
+            leftSafe = self.KB.askSafe(left[0], left[1]) and not self.KB.askWall(left[0], left[1])
+            rightSafe = self.KB.askSafe(right[0], right[1]) and not self.KB.askWall(right[0], right[1])
+            backSafe = self.KB.askSafe(back[0], back[1]) and not self.KB.askWall(back[0], back[1])
+            # Check cells are visited to add priority to those not visited
+            visitFront = self.map[front[1]][front[0]] == ' '
+            visitLeft = self.map[left[1]][left[0]] == ' '
+            visitRight = self.map[right[1]][right[0]] == ' '
+            visitBack = self.map[back[1]][back[0]] == ' '
+            # Heuristic for checking out cells if there is glitter
+            # It tell the agent to disregard any other safe cell near it if there are safe cell that could be gold
+            frontGold = frontSafe and self.KB.askGold(front[0], front[1]) and visitFront
+            leftGold = leftSafe and self.KB.askGold(left[0], left[1]) and visitLeft
+            rightGold = rightSafe and self.KB.askGold(right[0], right[1]) and visitRight
+            backGold = backSafe and self.KB.askGold(back[0], back[1]) and visitBack
+            # Safe not visited
+            safeNotVisitedAround = ((visitRight and rightSafe) or (visitLeft and leftSafe) or (visitBack and backSafe)) and not visitFront
+            # If the cell in front of the agent is safe move forward
+            if frontSafe and not safeNotVisitedAround:
+                self.moveForward()
+            # If it is not safe
+            else:
+                # Initialize an array that will store the possible actions
+                safe = []
+                # If any of the neighboring cells could be gold and are safe
+                if frontGold or leftGold or rightGold or backGold:
+                    # If they are a possibility add them to the possible actions
+                    if frontGold:
+                        safe.append("Front")
+                    if rightGold:
+                        safe.append("Right")
+                    if leftGold:
+                        safe.append("Left")
+                    if backGold:
+                        safe.append("Back")
+                # Create priority to cells that are unvisited if multiple safe
+                elif (visitFront and frontSafe) or (visitRight and rightSafe) or (visitLeft and leftSafe) or (
+                        visitBack and backSafe):
+                    if visitFront:
+                        safe.append("Front")
+                    if visitRight:
+                        safe.append("Right")
+                    if visitLeft:
+                        safe.append("Left")
+                    if visitBack:
+                        safe.append("Back")
+                # If no potential gold add all safe cells visited
+                else:
+                    if leftSafe:
+                        safe.append("Left")
+                    if rightSafe:
+                        safe.append("Right")
+                    if backSafe:
+                        safe.append("Back")
+                # Try to randomly pick one of the safe/safe & gold options
+                try:
+                    choice = random.choice(safe)
+                # If it fails to make a choice then none of the neighboring cells of the agent are safe thus the
+                # agent is stuck
+                except IndexError:
+                    print("Stuck")
+                    break
+                # Converter of the choice to which direction to turn to depending on agents current heading
+                if choice == "Left":
+                    if self.facing == "South":
+                        self.turn("East")
+                    elif self.facing == "East":
+                        self.turn("North")
+                    elif self.facing == "West":
+                        self.turn("South")
+                    elif self.facing == "North":
+                        self.turn("West")
+                elif choice == "Right":
+                    if self.facing == "South":
+                        self.turn("West")
+                    elif self.facing == "East":
+                        self.turn("South")
+                    elif self.facing == "West":
+                        self.turn("North")
+                    elif self.facing == "North":
+                        self.turn("East")
+                elif choice == "Back":
+                    if self.facing == "South":
+                        self.turn("North")
+                    elif self.facing == "East":
+                        self.turn("West")
+                    elif self.facing == "West":
+                        self.turn("North")
+                    elif self.facing == "North":
+                        self.turn("South")
+            # Set a timeout so that if the gold is not possible to be found and the agent is looking everywhere to find
+            # it can stop
+            if self.numActions >= 2000:
                 self.alive = False
 
-            '''
-            if self.kb.percept_here==bump:
-                if (cell to right is unvisited):
-                    turn right
-                elif (cell to left is unvisited):
-                    turn left
-                elif (cell to bottom is unvisited):
-                    turn around
-            else:
-                if findUnvisitedCells():
-                    if unvisitedCell isSafe():
-                        turn/move to unvisitedCell
-            else:
-                findSafeCell()
 
-            if self.kb.perceptatcell is bump, turn to safe direction in knowledge base
-            if cell in front is safe, self.moveForward()
-            else if cell to the left is safe, self.turnleft()
-            else if cell to right is safe, self.turnright()
-            else if no cells safe, backtrack?
-            '''
-
-        # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors
-        # and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
-        #     Record percepts and see if we can make any new inferences in KB
-        # If has gold exit
-        # If wumpus known and have arrows kill
-        # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
-
-class ReactiveExplorer():
+class ReactiveExplorer:
     def __init__(self, world: World):
         self.world = world
         self.currentLevel = None
@@ -395,8 +437,8 @@ class ReactiveExplorer():
 
     # Runner for the agent to find the gold
     def findGold(self):
+        self.perceive()  # gather percepts from the current cell
         while self.alive and not self.hasGold:
-            self.perceive()  # gather percepts from the current cell
             s, n, e, w = self.getAdjCellMap()  # gather knowledge about adjacent cells
 
             # if the agent is next to the gold
@@ -413,7 +455,7 @@ class ReactiveExplorer():
                     toExplore.append('West')
 
                 # turn to face one of the unexplored cells and enter it
-                #if not len(toExplore) == 0:
+                # if not len(toExplore) == 0:
                 self.facing = random.choice(toExplore)
                 self.moveForward()
 
@@ -670,8 +712,12 @@ class KnowledgeBase:
 
 class Main:
     world = World(1)
-    ReactExplorer = ReactiveExplorer(world)
-    print(ReactExplorer)
+    # ReactExplorer = ReactiveExplorer(world)
+    # print(ReactExplorer)
+    folExplorer = Explorer(world)
+    print("Points: " + str(folExplorer.points) + " Wumpus Killed: " + str(folExplorer.numWumpusKilled))
+    print("Number of levels: " + str(len(folExplorer.world.levels)))
+    print("Deaths: " + str(folExplorer.numWumpusKilledBy + folExplorer.numPitsFallenIn))
 
 
 Main()
