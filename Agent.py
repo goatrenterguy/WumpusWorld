@@ -1,5 +1,6 @@
 from Environment import *
 from Objects import *
+import random
 
 
 class Expression:
@@ -42,7 +43,8 @@ class Explorer:
             self.map = [[' '] * level.size for i in range(level.size)]
             self.KB = KnowledgeBase()
             self.findGold()
-            print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions))
+            print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions)+"\n")
+            #print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions)+"\n")
             self.KArchive.append(self.KB)
 
     # Shot arrow
@@ -65,7 +67,7 @@ class Explorer:
             self.location[0] -= 1
         if not self.perceive():
             self.location = tempLocation
-        print(self.location)
+
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
@@ -111,76 +113,64 @@ class Explorer:
             visitN = self.map[self.location[1] - 1][self.location[0]]
             visitE = self.map[self.location[1]][self.location[0] + 1]
             visitW = self.map[self.location[1]][self.location[0] - 1]
-            South = self.KB.askSafe(self.location[0], self.location[1] + 1) and not self.KB.askWall(self.location[0], self.location[1] + 1)
-            North = self.KB.askSafe(self.location[0], self.location[1] - 1) and not self.KB.askWall(self.location[0], self.location[1] - 1)
-            East = self.KB.askSafe(self.location[0] + 1, self.location[1]) and not self.KB.askWall(self.location[0] + 1, self.location[1])
-            West = self.KB.askSafe(self.location[0] - 1, self.location[1]) and not self.KB.askWall(self.location[0] - 1, self.location[1])
+            South = ["South", self.KB.askSafe(self.location[0], self.location[1] + 1) and not self.KB.askWall
+                            (self.location[0], self.location[1] + 1), self.map[self.location[1] + 1][self.location[0]]]
+            North = ["North", self.KB.askSafe(self.location[0], self.location[1] - 1) and not self.KB.askWall
+                            (self.location[0], self.location[1] - 1), self.map[self.location[1] - 1][self.location[0]]]
+            East = ["East", self.KB.askSafe(self.location[0] + 1, self.location[1]) and not self.KB.askWall
+                            (self.location[0] + 1, self.location[1]), self.map[self.location[1]][self.location[0] + 1]]
+            West = ["West", self.KB.askSafe(self.location[0] - 1, self.location[1]) and not self.KB.askWall
+                            (self.location[0] - 1, self.location[1]), self.map[self.location[1]][self.location[0] - 1]]
 
-            moved = False
+            priority = []
+            directions = [South, North, East, West]
+            '''
+            for d in directions:
+                if d[1]:
+                    directions.remove(d)
+                elif d[2] == ' ':
+                    priority.append(d)
+            #print("Directions length", len(directions))
+            #print("Priority length", len(priority))
+            if len(priority) > 0:
+                priChoice = random.choice(priority)
+                priority.remove(priChoice)
+                if not self.facing == str(priChoice[0]):
+                    print("Turning")
+                    self.turn(str(priChoice[0]))
+                self.moveForward()
+            elif len(directions) > 0:
+                choice = random.choice(directions)
+                directions.remove(choice)
+                if not str(choice[0]) == self.facing:
+                    print("Not priority turning")
+                    #print(self.facing)
+                    self.turn(str(choice[0]))
+                self.moveForward()
 
-            if South and visitS == ' ' and self.facing == "South":
+            print(self.currentLevel)
+            if self.numActions > 1000:
+                self.alive = False
+            '''
+            for d in directions:
+                if not d[1]:
+                    directions.remove(d)
+                elif str(d[2]) == ' ':
+                    priority.append(d)
+            choice = random.choice(directions)
+            if len(priority) > 0:
+                priChoice = random.choice(priority)
+                if str(priChoice[0]) != str(self.facing):
+                    self.turn(str(priChoice[0]))
                 self.moveForward()
-                moved = True
-            elif North and visitN == ' ' and self.facing == "North":
+            else:
+                if str(choice[0]) != str(self.facing):
+                    self.turn(str(choice[0]))
                 self.moveForward()
-                moved = True
-            elif East and visitE == ' ' and self.facing == "East":
-                self.moveForward()
-                moved = True
-            elif West and visitW == ' ' and self.facing == 'West':
-                self.moveForward()
-                moved = True
-
-            if South and not moved:
-                if self.facing == "South":
-                    self.moveForward()
-                    moved = True
-            elif North and not moved:
-                if self.facing == "North":
-                    self.moveForward()
-                    moved = True
-            elif East and not moved:
-                if self.facing == "East":
-                    self.moveForward()
-                    moved = True
-            elif West and not moved:
-                if self.facing == "West":
-                    self.moveForward()
-                    moved = True
-
-            if not moved:
-                if South:
-                    self.turn("South")
-                elif North:
-                    self.turn("North")
-                elif East:
-                    self.turn("East")
-                elif West:
-                    self.turn("West")
-            if self.numActions >= 1000:
+            if self.numActions > 10000:
                 self.alive = False
 
-            '''
-            if self.kb.percept_here==bump:
-                if (cell to right is unvisited):
-                    turn right
-                elif (cell to left is unvisited):
-                    turn left
-                elif (cell to bottom is unvisited):
-                    turn around
-            else:
-                if findUnvisitedCells():
-                    if unvisitedCell isSafe():
-                        turn/move to unvisitedCell
-            else:
-                findSafeCell()
-            
-            if self.kb.perceptatcell is bump, turn to safe direction in knowledge base
-            if cell in front is safe, self.moveForward()
-            else if cell to the left is safe, self.turnleft()
-            else if cell to right is safe, self.turnright()
-            else if no cells safe, backtrack?
-            '''
+
 
         # Need to visit all known unvisited safe squares not sure the best way to do this aside from checking neighbors
         # and if any of them are safe (We could use a backtracking method to find the closest safe unexplored cell
@@ -375,10 +365,10 @@ class KnowledgeBase:
     # Infer Pits
     def genNotPitRule(self, cell):
         # resolve and unify Not(Pit(Cell))
-        up = Not(Pit(Cell(cell.x, cell.y - 1)))
-        down = Not(Pit(Cell(cell.x, cell.y + 1)))
-        left = Not(Pit(Cell(cell.x - 1, cell.y)))
-        right = Not(Pit(Cell(cell.x + 1, cell.y)))
+        up = Not(Breeze(Cell(cell.x, cell.y - 1)))
+        down = Not(Breeze(Cell(cell.x, cell.y + 1)))
+        left = Not(Breeze(Cell(cell.x - 1, cell.y)))
+        right = Not(Breeze(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
         return clause
 
@@ -437,9 +427,9 @@ class KnowledgeBase:
 
 class Main:
     world = World(1)
-    # print(world.levels[0])
+    #print(world.levels[0])
     FOLExplorer = Explorer(world)
-    print(FOLExplorer.KArchive)
+    #print(FOLExplorer.KArchive)
 
 
 Main()
