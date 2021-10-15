@@ -81,7 +81,8 @@ class Explorer:
             self.numPitsFallenIn += 1
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'X':
             # Tell the KB that there is a obstacle at current location
-            self.KB.tellPercept(self.currentLevel.percepts[self.location[1][self.location[0]]])
+            self.KB.tellPercept(self.location[0], self.location[1],
+                                self.currentLevel.percepts[self.location[1]][self.location[0]])
             self.numCellsExplored -= 1
             return False
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'G':
@@ -141,6 +142,83 @@ class Explorer:
         # If has gold exit
         # If wumpus known and have arrows kill
         # If no safe squares do we kill ourselves or do we risk it? We can experiment with both
+
+
+class ReactiveExplorer():
+    def __init__(self, world: World):
+        self.world = world
+        self.currentLevel = None
+        self.location = None
+        self.facing = 'South'
+        self.time = 0
+        self.points = 0
+        self.numGold = 0
+        self.numWumpusKilled = 0
+        self.numPitsFallenIn = 0
+        self.numCellsExplored = 0
+        self.numWumpusKilledBy = 0
+        self.NumActions = 0
+        self.alive = True
+        self.hasGold = False
+        self.arrows = 0
+        self.runner()
+        self.map = None
+
+    # Runner for explorer
+    def runner(self):
+        for level in self.world.levels:
+            self.currentLevel = level
+            self.location = level.agent
+            self.map = [[' '] * level.size for i in range(level.size)]
+            self.findGold()
+
+    # Register percepts returns true or false if agent can stay in that cell
+    def perceive(self):
+        if self.currentLevel.board[self.location[1]][self.location[0]] == 'W':
+            self.alive = False
+            # Can change this value
+            self.points -= 10000
+            self.numWumpusKilledBy += 1
+        elif self.currentLevel.board[self.location[1]][self.location[0]] == 'P':
+            self.alive = False
+            # Can change this value
+            self.points -= 10000
+            self.numPitsFallenIn += 1
+        elif self.currentLevel.board[self.location[1]][self.location[0]] == 'X':
+            # Tell the KB that there is a obstacle at current location
+            self.numCellsExplored -= 1
+            return False
+        elif self.currentLevel.board[self.location[1]][self.location[0]] == 'G':
+            self.points += 1000
+            self.numGold += 1
+            self.hasGold = True
+        else:
+            #
+            # self.currentLevel.percepts[self.location[1]][self.location[0]])
+            self.map[self.location[1]][self.location[0]] = "V"
+        return True
+
+    def getCells(self):
+        adjacent = []
+        adjacent.append(self.map[self.location[0]][self.location[1] + 1])  # South
+        adjacent.append(self.map[self.location[0]][self.location[1] - 1])  # North
+        adjacent.append(self.map[self.location[0] + 1][self.location[1]])  # East
+        adjacent.append(self.map[self.location[0] - 1][self.location[1]])  # West
+
+    def findGold(self):
+        while self.alive and not self.hasGold:
+            self.getCells()
+
+    '''
+    say that a cell and its neighbors are safe if there are no danger percepts when you get a danger percept
+    move to a safe and not visited cell
+    if there isn't one
+        shoot the arrow
+            if no scream
+                walk forward
+            if scream
+                pick a different direction
+    '''
 
 
 # KnowledgeBase Object
