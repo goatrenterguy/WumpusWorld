@@ -2,13 +2,7 @@ from Environment import *
 from Objects import *
 
 
-class Expression:
-    def __init__(self):
-        self.variables = []
-        self.operators = []
-        self.functions = []
-
-
+# FOL reactive explorer
 class Explorer:
     def __init__(self, world: World):
         self.world = world
@@ -34,15 +28,24 @@ class Explorer:
     # Runner for explorer
     def runner(self):
         for level in self.world.levels:
+            # Set current level to level
             self.currentLevel = level
+            # Set to current location of the agent
             self.location = level.agent
+            # Reset variable has Gold to false if on previous level we found gold
             self.hasGold = False
+            # Reset alive in case we died on previous level
             self.alive = True
+            # Reset the number of action for the level
             self.numActions = 0
+            # Initialize a map that stores if we have visited a cell or not
             self.map = [[' '] * level.size for i in range(level.size)]
+            # Initialize a knowledge base for the level
             self.KB = KnowledgeBase()
+            # Start runner for instructions to find gold
             self.findGold()
             # print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions))
+            # Archive the the knowledge base after each level so we can look at each level individually
             self.KArchive.append(self.KB)
 
     # Shot arrow
@@ -52,9 +55,13 @@ class Explorer:
 
     # Move the explorer forward
     def moveForward(self):
+        # Increment the number of actions taken
         self.numActions += 1
+        # Increment the number of cells explored
         self.numCellsExplored += 1
+        # Create a copy of the current location in case we run into a wall and have to get pushed back
         tempLocation = self.location.copy()
+        # Move forward depending on which direction the explorer is facing
         if self.facing == 'South':
             self.location[1] += 1
         elif self.facing == 'North':
@@ -68,27 +75,35 @@ class Explorer:
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
+        # Check if we killed ourselves on a Wumpus
         if self.currentLevel.board[self.location[1]][self.location[0]] == 'W':
             self.alive = False
             # Can change this value
             self.points -= 10000
             self.numWumpusKilledBy += 1
+        # Check if we fell into a pit and died
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'P':
             self.alive = False
             # Can change this value
             self.points -= 10000
             self.numPitsFallenIn += 1
+        # Check if we ran into a wall
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'X':
             # Tell the KB that there is a obstacle at current location
+            # Tell KB that there is a wall here
             self.KB.tellPercept(self.location[0], self.location[1],
                                 self.currentLevel.percepts[self.location[1]][self.location[0]])
+            # Mark that cell as unexplored
             self.numCellsExplored -= 1
+            # Return false letting moveForward() know that it hit a wall and should back up
             return False
+        # Check if we ran into the gold
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'G':
             self.points += 1000
             self.numGold += 1
             self.KB.tell(Gold(Cell(self.location[0], self.location[1])))
             self.hasGold = True
+        # Otherwise tell the KB or perceptions of the cell
         else:
             # Tell the KB the percepts placeholder fact entered
             self.KB.tellPercept(self.location[0], self.location[1],
@@ -103,8 +118,12 @@ class Explorer:
 
     # Runner for the agent to find the gold
     def findGold(self):
+        # Register the perceptions of the entry cell of the agent
         self.perceive()
+        # Continue exploring while we are a live or dont have the gold
         while self.alive and not self.hasGold:
+            # If statements for defining what left, right, front, and back are in terms of the agent's current cell and
+            # which direction the agent is facing
             if self.facing == "South":
                 front = [self.location[0], self.location[1] + 1]
                 left = [self.location[0] + 1, self.location[1]]
@@ -125,26 +144,52 @@ class Explorer:
                 left = [self.location[0] - 1, self.location[1]]
                 right = [self.location[0] + 1, self.location[1]]
                 back = [self.location[0], self.location[1] + 1]
-            # Ask directions
+            # Check if any of the cells around us are known to be safe or not a wall
             frontSafe = self.KB.askSafe(front[0], front[1]) and not self.KB.askWall(front[0], front[1])
             leftSafe = self.KB.askSafe(left[0], left[1]) and not self.KB.askWall(left[0], left[1])
             rightSafe = self.KB.askSafe(right[0], right[1]) and not self.KB.askWall(right[0], right[1])
             backSafe = self.KB.askSafe(back[0], back[1]) and not self.KB.askWall(back[0], back[1])
+            # Heuristic for checking out cells if there is glitter
+            # It tell the agent to disregard any other safe cell near it if there are safe cell that could be gold
+            frontGold = frontSafe and self.KB.askGold(front[0], front[1])
+            leftGold = leftSafe and self.KB.askGold(left[0], left[1])
+            rightGold = rightSafe and self.KB.askGold(right[0], right[1])
+            backGold = backSafe and self.KB.askGold(back[0], back[1])
+            # If the cell in front of the agent is safe move forward
             if frontSafe:
                 self.moveForward()
+            # If it is not safe
             else:
+                # Initialize an array that will store the possible actions
                 safe = []
-                if leftSafe:
-                    safe.append("Left")
-                if rightSafe:
-                    safe.append("Right")
-                if backSafe:
-                    safe.append("Back")
+                # If any of the neighboring cells could be gold and are safe
+                if frontGold or leftGold or rightGold or backGold:
+                    # If they are a possibility add them to the possible actions
+                    if frontGold:
+                        safe.append("Front")
+                    if rightGold:
+                        safe.append("Right")
+                    if leftGold:
+                        safe.append("Left")
+                    if backGold:
+                        safe.append("Back")
+                # If no potential gold add all safe cells
+                else:
+                    if leftSafe:
+                        safe.append("Left")
+                    if rightSafe:
+                        safe.append("Right")
+                    if backSafe:
+                        safe.append("Back")
+                # Try to randomly pick one of the safe/safe & gold options
                 try:
                     choice = random.choice(safe)
+                # If it fails to make a choice then none of the neighboring cells of the agent are safe thus the
+                # agent is stuck
                 except IndexError:
-                    # print("Stuck")
+                    print("Stuck")
                     break
+                # Converter of the choice to which direction to turn to depending on agents current heading
                 if choice == "Left":
                     if self.facing == "South":
                         self.turn("East")
@@ -172,7 +217,9 @@ class Explorer:
                         self.turn("North")
                     elif self.facing == "North":
                         self.turn("South")
-            if self.numActions >= 1000:
+            # Set a timeout so that if the gold is not possible to be found and the agent is looking everywhere to find
+            # it can stop
+            if self.numActions >= 2000:
                 self.alive = False
 
 
@@ -256,6 +303,7 @@ class ReactiveExplorer():
 class KnowledgeBase:
     def __init__(self):
         # self.Clauses = [[Cell] * levelSize for i in range(levelSize)]
+        # Initialize the list of clauses
         self.clauses = []
         # Add rules to the knowledge base. Rules needed:
         # (~sml(cell) | wmp(cell.n()))
@@ -299,17 +347,24 @@ class KnowledgeBase:
     # Add percepts given by agent to KB
     def tellPercept(self, x, y, percepts: list):
         cell = Cell(x, y)
+        # If there is a smell being passed in and its not already known add it to the knowledge base
         if "Smell" in percepts and not self.findInClauses(Smell(cell)):
             self.clauses.append(Smell(cell))
+        # If there is a breeze and its not in the knowledge base add it
         if "Breeze" in percepts and not self.findInClauses(Breeze(cell)):
             self.clauses.append(Breeze(cell))
+        # If there is a glitter and its not in the knowledge base add it
         if "Glitter" in percepts and not self.findInClauses(Glitter(cell)):
             self.clauses.append(Glitter(cell))
+        # If there is a Bump and its not in the knowledge base add it
         if "Bump" in percepts and not self.findInClauses(Bump(cell)):
             self.clauses.append(Bump(cell))
+            # Need to return so that the cell with a wall is not marked as visited throwing off the logic
             return
+        # If there is a scream and its not in the knowledge base add it
         if "Scream" in percepts and not self.findInClauses(Scream(cell)):
             self.clauses.append(Scream(cell))
+        # Register the cell as visited
         if not self.findInClauses(Visited(cell)):
             self.clauses.append(Visited(cell))
 
@@ -322,7 +377,6 @@ class KnowledgeBase:
         elif isinstance(q, Or):
             lhs = self.BCResolution(q.lhs)
             rhs = self.BCResolution(q.rhs)
-            test = lhs or rhs
             return lhs or rhs
         # Check if an And statement and evaluates the lhs and rhs and "and" the results together
         elif isinstance(q, And):
@@ -351,6 +405,7 @@ class KnowledgeBase:
     # Infer Wumpus
     def genNotWumpusRule(self, cell):
         # resolve and unify Not(Wumpus(Cell))
+        # It is not a Wumpus if there are no smells in the neighboring cells
         up = Not(Smell(Cell(cell.x, cell.y - 1)))
         down = Not(Smell(Cell(cell.x, cell.y + 1)))
         left = Not(Smell(Cell(cell.x - 1, cell.y)))
@@ -361,6 +416,7 @@ class KnowledgeBase:
     # Infer Pits
     def genNotPitRule(self, cell):
         # resolve and unify Not(Pit(Cell))
+        # It is not a Pit if there are no breezes in the neighboring cells
         up = Not(Breeze(Cell(cell.x, cell.y - 1)))
         down = Not(Breeze(Cell(cell.x, cell.y + 1)))
         left = Not(Breeze(Cell(cell.x - 1, cell.y)))
@@ -371,16 +427,13 @@ class KnowledgeBase:
     # Infer Gold
     def genGoldRule(self, cell):
         # resolve and unify Not(Gold(Cell))
+        # It is gold if there are is glitter in the neighboring cells
         up = Glitter(Cell(cell.x, cell.y - 1))
         down = Glitter(Cell(cell.x, cell.y + 1))
         left = Glitter(Cell(cell.x - 1, cell.y))
         right = Glitter(Cell(cell.x + 1, cell.y))
         clause = And(And(up, down), And(left, right))
         return clause
-
-    # Scream rules
-    def inferScream(self, cell):
-        pass
 
     # Infer if cell is safe
     def genSafeRule(self, cell):
@@ -399,6 +452,7 @@ class KnowledgeBase:
         for clause in self.clauses:
             if clause == Safe(cell):
                 return True
+        # If the clause is not in the list of clauses we need to infer it
         if self.BCResolution(self.genSafeRule(cell)[1]):
             self.clauses.append(Safe(cell))
             return True
@@ -408,6 +462,10 @@ class KnowledgeBase:
     def askGold(self, x, y):
         # Is gold if any of the neighbors dont have glitter
         cell = Cell(x, y)
+        for clause in self.clauses:
+            if clause == Gold(cell):
+                return True
+        # If the clause is not in the list of clauses we need to infer it
         if self.BCResolution(self.genGoldRule(cell)):
             self.clauses.append(Gold(cell))
             return True
@@ -416,13 +474,14 @@ class KnowledgeBase:
     # Ask if a cell is a wall
     def askWall(self, x, y):
         cell = Cell(x, y)
+        # Check if the cell is a wall
         if self.findInClauses(Bump(cell)):
             return True
         return False
 
 
 class Main:
-    world = World(10)
+    world = World(1)
     # world.levels = [world.levels[0]]
     # print(world.levels[0])
     FOLExplorer = Explorer(world)
