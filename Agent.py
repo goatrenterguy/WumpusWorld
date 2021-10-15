@@ -366,21 +366,29 @@ class ReactiveExplorer():
         self.arrows -= 1  # decrement the number of arrows
         if self.facing == 'South':
             for i in range(self.currentLevel.size - self.location[1]):  # iterate from to the edge of the board
+                if self.currentLevel.board[self.location[1] + i][self.location[0]] == 'x':
+                    break
                 if self.currentLevel.board[self.location[1] + i][self.location[0]] == 'W':  # if it hits a Wumpus
                     return True  # return the scream percept
             return False
         if self.facing == 'North':
             for i in range(self.currentLevel.size - self.location[1]):
+                if self.currentLevel.board[self.location[1] - i][self.location[0]] == 'X':
+                    break
                 if self.currentLevel.board[self.location[1] - i][self.location[0]] == 'W':
                     return True
             return False
         if self.facing == 'East':
             for i in range(self.currentLevel.size - self.location[0]):
+                if self.currentLevel.board[self.location[1]][self.location[0] + i] == 'X':
+                    break
                 if self.currentLevel.board[self.location[1]][self.location[0] + i] == 'W':
                     return True
             return False
         if self.facing == 'West':
             for i in range(self.currentLevel.size - self.location[0]):
+                if self.currentLevel.board[self.location[1]][self.location[0] - i] == 'X':
+                    break
                 if self.currentLevel.board[self.location[1]][self.location[0] - i] == 'W':
                     return True
             return False
