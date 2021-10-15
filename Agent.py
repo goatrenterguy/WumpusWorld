@@ -5,13 +5,14 @@ from Objects import *
 
 
 def printVariables(agent):
-    print("Points: " + str(agent.points)
-          + " | Wumpus Killed: " + str(agent.numWumpusKilled)
-          + " | Cells Explored: " + str(agent.numCellsExplored)
-          + " | Total Actions: " + str(agent.totalNumActions)
-          + " | Times killed by wumpus: " + str(agent.numWumpusKilledBy) + " | Times killed by pit: " + str(agent.numPitsFallenIn)
-          + " | Times gold found: " + str(agent.numGold) + " | Deaths: " + str(agent.numWumpusKilledBy + agent.numPitsFallenIn))
+    print(
+        "Points: {0} | Wumpus Killed: {1} | Cells Explored: {2} | Total Actions: {3} | Times killed by wumpus: {4} | "
+        "Times killed by pit: {5} | Times gold found: {6} | Deaths: {7}".format(
+            str(agent.points), str(agent.numWumpusKilled), str(agent.numCellsExplored), str(agent.totalNumActions),
+            str(agent.numWumpusKilledBy), str(agent.numPitsFallenIn), str(agent.numGold),
+            str(agent.numWumpusKilledBy + agent.numPitsFallenIn)))
     print("Number of levels: " + str(len(agent.world.levels)))
+
 
 def printExplorerLocation(board, x, y):
     board[y][x] = 'a'
@@ -215,7 +216,8 @@ class Explorer:
             rightGold = rightSafe and self.KB.askGold(right[0], right[1]) and visitRight
             backGold = backSafe and self.KB.askGold(back[0], back[1]) and visitBack
             # Safe not visited
-            safeNotVisitedAround = ((visitRight and rightSafe) or (visitLeft and leftSafe) or (visitBack and backSafe)) and not visitFront
+            safeNotVisitedAround = ((visitRight and rightSafe) or (visitLeft and leftSafe) or (
+                        visitBack and backSafe)) and not visitFront
             # If the cell in front of the agent is safe move forward
             if frontSafe and not safeNotVisitedAround:
                 self.moveForward()
@@ -309,7 +311,7 @@ class ReactiveExplorer:
         self.numPitsFallenIn = 0
         self.numCellsExplored = 0
         self.numWumpusKilledBy = 0
-        self.NumActions = 0
+        self.numActions = 0
         self.alive = True
         self.hasGold = False
         self.arrows = 0
@@ -335,7 +337,8 @@ class ReactiveExplorer:
             self.map = [[' '] * level.size for i in range(level.size)]
             # Start runner for instructions to find gold
             self.findGold()
-            print("Level: \n" + str(level) + "\nPoints: " + str(self.points))
+            # print("Level: \n" + str(level) + "\nPoints: " + str(self.points))
+            self.totalNumActions += self.numActions
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
@@ -727,11 +730,11 @@ class Main:
     # ReactExplorer = ReactiveExplorer(world)
     # print(ReactExplorer)
     folExplorer = Explorer(world)
-    goldFish = ReactiveExplorer(world)
+    # goldFish = ReactiveExplorer(world)
     print("Reasoning Agent:")
     printVariables(folExplorer)
-    print("Reactive Agent:")
-    printVariables(goldFish)
+    # print("Reactive Agent:")
+    # printVariables(goldFish)
 
 
 Main()
