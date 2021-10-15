@@ -23,8 +23,8 @@ class Explorer:
         self.numCellsExplored = 0
         self.numWumpusKilledBy = 0
         self.numActions = 0
-        self.alive = True
-        self.hasGold = False
+        self.alive = None
+        self.hasGold = None
         self.arrows = 0
         self.KB = None
         self.KArchive = []
@@ -36,6 +36,8 @@ class Explorer:
         for level in self.world.levels:
             self.currentLevel = level
             self.location = level.agent
+            self.hasGold = False
+            self.alive = True
             self.numActions = 0
             self.map = [[' '] * level.size for i in range(level.size)]
             self.KB = KnowledgeBase()
