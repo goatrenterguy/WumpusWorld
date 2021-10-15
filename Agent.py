@@ -107,10 +107,56 @@ class Explorer:
         self.perceive()
         while self.alive and not self.hasGold:
             # Check if move forward is safe
-            if self.facing == "South":
-                front = [self.location[0]]
-            front = self.KB.askSafe()
+            visitS = self.map[self.location[1] + 1][self.location[0]]
+            visitN = self.map[self.location[1] - 1][self.location[0]]
+            visitE = self.map[self.location[1]][self.location[0] + 1]
+            visitW = self.map[self.location[1]][self.location[0] - 1]
+            South = self.KB.askSafe(self.location[0], self.location[1] + 1) and not self.KB.askWall(self.location[0], self.location[1] + 1)
+            North = self.KB.askSafe(self.location[0], self.location[1] - 1) and not self.KB.askWall(self.location[0], self.location[1] - 1)
+            East = self.KB.askSafe(self.location[0] + 1, self.location[1]) and not self.KB.askWall(self.location[0] + 1, self.location[1])
+            West = self.KB.askSafe(self.location[0] - 1, self.location[1]) and not self.KB.askWall(self.location[0] - 1, self.location[1])
 
+            moved = False
+
+            if South and visitS == ' ' and self.facing == "South":
+                self.moveForward()
+                moved = True
+            elif North and visitN == ' ' and self.facing == "North":
+                self.moveForward()
+                moved = True
+            elif East and visitE == ' ' and self.facing == "East":
+                self.moveForward()
+                moved = True
+            elif West and visitW == ' ' and self.facing == 'West':
+                self.moveForward()
+                moved = True
+
+            if South and not moved:
+                if self.facing == "South":
+                    self.moveForward()
+                    moved = True
+            elif North and not moved:
+                if self.facing == "North":
+                    self.moveForward()
+                    moved = True
+            elif East and not moved:
+                if self.facing == "East":
+                    self.moveForward()
+                    moved = True
+            elif West and not moved:
+                if self.facing == "West":
+                    self.moveForward()
+                    moved = True
+
+            if not moved:
+                if South:
+                    self.turn("South")
+                elif North:
+                    self.turn("North")
+                elif East:
+                    self.turn("East")
+                elif West:
+                    self.turn("West")
             if self.numActions >= 1000:
                 self.alive = False
 
