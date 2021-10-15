@@ -395,22 +395,24 @@ class ReactiveExplorer():
             if 'Glitter' in self.knowledge:
                 # find unexplored cells to look for gold in
                 toExplore = []
-                if s == '':
+                if s == ' ':
                     toExplore.append('South')
-                if n == '':
+                if n == ' ':
                     toExplore.append('North')
-                if e == '':
+                if e == ' ':
                     toExplore.append('East')
-                if w == '':
+                if w == ' ':
                     toExplore.append('West')
 
-                # turn to face on of the unexplored cells and enter it
+                # turn to face one of the unexplored cells and enter it
+                #if not len(toExplore) == 0:
                 self.facing = random.choice(toExplore)
                 self.moveForward()
 
             # if the adjacent cells are safe enter one of them that is not explored
             if 'Smell' not in self.knowledge and 'Breeze' not in self.knowledge:
-                if s == ' ' and self.facing == 'South':  # if the adjacent cell is unexplored and the agent is facing it
+                # enter the first unexplored adjacent cell
+                if s == ' ' and self.facing == 'South':  # if the agent is facing the unexplored cell
                     self.moveForward()  # move forward into the cell
                     continue
                 elif n == ' ' and self.facing == 'North':
@@ -433,6 +435,33 @@ class ReactiveExplorer():
                         self.turn("East")
                         self.moveForward()
                     elif w == ' ':
+                        self.turn("West")
+                        self.moveForward()
+
+                # enter the first explored adjacent cell
+                if s == 'V' and self.facing == 'South':  # if the agent is facing the explored cell
+                    self.moveForward()  # move forward into the cell
+                    continue
+                elif n == 'V' and self.facing == 'North':
+                    self.moveForward()
+                    continue
+                elif e == 'V' and self.facing == 'East':
+                    self.moveForward()
+                    continue
+                elif w == 'V' and self.facing == 'West':
+                    self.moveForward()
+                    continue
+                else:  # the agent is not facing an explored cell
+                    if s == 'V':
+                        self.turn("South")  # turn to face the explored cell
+                        self.moveForward()  # enter the explored cell
+                    elif n == 'V':
+                        self.turn("North")
+                        self.moveForward()
+                    elif e == 'V':
+                        self.turn("East")
+                        self.moveForward()
+                    elif w == 'V':
                         self.turn("West")
                         self.moveForward()
 
@@ -633,7 +662,6 @@ class KnowledgeBase:
 
 class Main:
     world = World(1)
-    print(world.levels[0])
     ReactExplorer = ReactiveExplorer(world)
     print(ReactExplorer)
 
