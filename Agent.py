@@ -1,4 +1,3 @@
-from colorama import Fore, Back, Style
 from Environment import *
 from Objects import *
 
@@ -23,7 +22,7 @@ class Explorer:
         self.numPitsFallenIn = 0
         self.numCellsExplored = 0
         self.numWumpusKilledBy = 0
-        self.NumActions = 0
+        self.numActions = 0
         self.alive = True
         self.hasGold = False
         self.arrows = 0
@@ -37,9 +36,11 @@ class Explorer:
         for level in self.world.levels:
             self.currentLevel = level
             self.location = level.agent
+            self.numActions = 0
             self.map = [[' '] * level.size for i in range(level.size)]
             self.KB = KnowledgeBase()
             self.findGold()
+            print("Level: \n" + str(level) + "\nPoints: " + str(self.points) + " Moves: " + str(self.numActions))
             self.KArchive.append(self.KB)
 
     # Shot arrow
@@ -51,17 +52,18 @@ class Explorer:
     def moveForward(self):
         self.action += 1
         self.numCellsExplored += 1
-        tempLocation = self.location
-        if self.direction == 'South':
+        tempLocation = self.location.copy()
+        if self.facing == 'South':
             self.location[1] += 1
-        elif self.direction == 'North':
+        elif self.facing == 'North':
             self.location[1] -= 1
-        elif self.direction == 'East':
+        elif self.facing == 'East':
             self.location[0] += 1
         elif self.direction == 'West':
             self.location[0] -= 1
         if not self.perceive():
             self.location = tempLocation
+        print(self.location)
 
     # Register percepts returns true or false if agent can stay in that cell
     def perceive(self):
@@ -83,6 +85,7 @@ class Explorer:
         elif self.currentLevel.board[self.location[1]][self.location[0]] == 'G':
             self.points += 1000
             self.numGold += 1
+            self.KB.tell(Gold(Cell(self.location[0], self.location[1])))
             self.hasGold = True
         else:
             # Tell the KB the percepts placeholder fact entered
@@ -142,7 +145,7 @@ class Explorer:
 
 # KnowledgeBase Object
 class KnowledgeBase:
-    def __init__(self, levelSize):
+    def __init__(self):
         # self.Clauses = [[Cell] * levelSize for i in range(levelSize)]
         self.clauses = []
         # Add rules to the knowledge base. Rules needed:
@@ -164,7 +167,6 @@ class KnowledgeBase:
         # (~safe(cell) | ~pit(cell))
         # - if visited(cell) then safe(cell)
         # - if number of Scream(Cell) == number of arrows then all wumpus are dead and we can treat them as walls
-        self.levelSize = levelSize
         # Add non unified rules
         self.clauses.append(And(And(Glitter(Cell("x", "y + 1")), Glitter(Cell("x", "y - 1"))),
                                 And(Glitter(Cell("x + 1", "y")), Glitter(Cell("x - 1", "y")))))
@@ -244,7 +246,6 @@ class KnowledgeBase:
         left = Not(Smell(Cell(cell.x - 1, cell.y)))
         right = Not(Smell(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
-        print(clause)
         return clause
 
     # Infer Pits
@@ -255,7 +256,6 @@ class KnowledgeBase:
         left = Not(Pit(Cell(cell.x - 1, cell.y)))
         right = Not(Pit(Cell(cell.x + 1, cell.y)))
         clause = Or(Or(up, down), Or(left, right))
-        print(clause)
         return clause
 
     # Infer Gold
@@ -266,7 +266,6 @@ class KnowledgeBase:
         left = Glitter(Cell(cell.x - 1, cell.y))
         right = Glitter(Cell(cell.x + 1, cell.y))
         clause = And(And(up, down), And(left, right))
-        print(clause)
         return clause
 
     # Scream rules
@@ -295,6 +294,7 @@ class KnowledgeBase:
             return True
         return False
 
+    # Ask if cell is gold
     def askGold(self, x, y):
         # Is gold if any of the neighbors dont have glitter
         cell = Cell(x, y)
@@ -303,9 +303,19 @@ class KnowledgeBase:
             return True
         return False
 
+    # Ask if a cell is a wall
+    def askWall(self, x, y):
+        cell = Cell(x, y)
+        if self.findInClauses(Bump(cell)):
+            return True
+        return False
+
 
 class Main:
-    pass
+    world = World(1)
+    # print(world.levels[0])
+    FOLExplorer = Explorer(world)
+    print(FOLExplorer.KArchive)
 
 
 Main()
