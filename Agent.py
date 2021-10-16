@@ -1,3 +1,5 @@
+import copy
+
 from Environment import *
 from Objects import *
 
@@ -310,7 +312,7 @@ class ReactiveExplorer:
         self.numCellsExplored = 0
         self.numWumpusKilledBy = 0
         self.numActions = 0
-        self.totalNumActions = None
+        self.totalNumActions = 0
         self.alive = True
         self.hasGold = False
         self.arrows = 0
@@ -453,6 +455,10 @@ class ReactiveExplorer:
     def findGold(self):
         self.perceive()  # gather percepts from the current cell
         while self.alive and not self.hasGold:
+            # kills the agent if it exceeds 2000 actions
+            if self.numActions >= 2000:
+                self.alive = False
+
             s, n, e, w = self.getAdjCellMap()  # gather knowledge about adjacent cells
 
             # if the agent is next to the gold
@@ -472,6 +478,7 @@ class ReactiveExplorer:
                 # if not len(toExplore) == 0:
                 self.facing = random.choice(toExplore)
                 self.moveForward()
+                continue
 
             # if the adjacent cells are safe enter one of them that is not explored
             if 'Smell' not in self.knowledge and 'Breeze' not in self.knowledge:
@@ -492,15 +499,19 @@ class ReactiveExplorer:
                     if s == ' ':
                         self.turn("South")  # turn to face the unexplored cell
                         self.moveForward()  # enter the unexplored cell
+                        continue
                     elif n == ' ':
                         self.turn("North")
                         self.moveForward()
+                        continue
                     elif e == ' ':
                         self.turn("East")
                         self.moveForward()
+                        continue
                     elif w == ' ':
                         self.turn("West")
                         self.moveForward()
+                        continue
 
                 # enter the first explored adjacent cell
                 if s == 'V' and self.facing == 'South':  # if the agent is facing the explored cell
@@ -519,30 +530,39 @@ class ReactiveExplorer:
                     if s == 'V':
                         self.turn("South")  # turn to face the explored cell
                         self.moveForward()  # enter the explored cell
+                        continue
                     elif n == 'V':
                         self.turn("North")
                         self.moveForward()
+                        continue
                     elif e == 'V':
                         self.turn("East")
                         self.moveForward()
+                        continue
                     elif w == 'V':
                         self.turn("West")
                         self.moveForward()
+                        continue
+                    else:  # the agent is surrounded by walls
+                        self.alive = False  # kill the agent because it cannot move
+                        continue
 
-            # at least one neighboring cell is dangerous so shoot an arrow
-            elif self.arrows > 0:
+            # if there is an adjacent wumpus, shoot an arrow
+            elif 'Smell' in self.knowledge and self.arrows > 0:
                 if not self.shootArrow():  # if there is no scream the cell is safe
                     self.moveForward()  # so enter it
+                    continue
                 else:  # if there is a scream
                     self.turnRand()  # turn to face a different direction
+                    self.numWumpusKilled += 1
                     self.moveForward()  # enter the cell
+                    continue
 
-            # the agent has no more arrows so it moves to a random neighbor
+            # the agent has no more arrows or there is only a pit adjacent to the agent
             else:
                 self.turnRandOrStay()  # turn to a random direction
                 self.moveForward()  # enter the cell
-            if self.numActions >= 2000:
-                self.alive = False
+                continue
 
 
 # KnowledgeBase Object
@@ -731,12 +751,12 @@ class Main:
     world = World(1)
     # ReactExplorer = ReactiveExplorer(world)
     # print(ReactExplorer)
-    folExplorer = Explorer(world)
-    # goldFish = ReactiveExplorer(world)
+    # folExplorer = Explorer(world)
+    goldFish = ReactiveExplorer(world)
     print("Reasoning Agent:")
-    printVariables(folExplorer)
-    # print("Reactive Agent:")
-    # printVariables(goldFish)
+    # printVariables(folExplorer)
+    print("Reactive Agent:")
+    printVariables(goldFish)
 
 
 Main()
