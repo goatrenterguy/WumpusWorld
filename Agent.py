@@ -783,11 +783,15 @@ class Main:
     plt.scatter(y=pointsFOL, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='g', marker="s", label='FOL Explorer')
     plt.scatter(y=pointsReactive, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='r', marker="o", label='Reactive Explorer')
     plt.legend(loc='center right')
+    plt.xlabel("Total Points")
+    plt.ylabel("World Number")
     plt.show()
 
     plt.scatter(y=actionsFOL, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='g', marker="s", label='FOL Explorer')
     plt.scatter(y=actionsReactive, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='r', marker="o", label='Reactive Explorer')
     plt.legend(loc='center right')
+    plt.xlabel("Total Actions")
+    plt.ylabel("World Number")
     plt.show()
 
 
