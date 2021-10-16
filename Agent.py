@@ -751,10 +751,10 @@ class Main:
     world = World(1)
     # ReactExplorer = ReactiveExplorer(world)
     # print(ReactExplorer)
-    # folExplorer = Explorer(world)
-    goldFish = ReactiveExplorer(world)
+    folExplorer = Explorer(copy.deepcopy(world))
+    goldFish = ReactiveExplorer(copy.deepcopy(world))
     print("Reasoning Agent:")
-    # printVariables(folExplorer)
+    printVariables(folExplorer)
     print("Reactive Agent:")
     printVariables(goldFish)
 
