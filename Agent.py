@@ -1,4 +1,6 @@
 import copy
+import matplotlib.pyplot as plt
+import pandas as pd
 
 from Environment import *
 from Objects import *
@@ -12,6 +14,14 @@ def printVariables(agent):
             str(agent.numWumpusKilledBy), str(agent.numPitsFallenIn), str(agent.numGold),
             str(agent.numWumpusKilledBy + agent.numPitsFallenIn)))
     print("Number of levels: " + str(len(agent.world.levels)))
+
+
+def getPoints(agent):
+    return agent.points
+
+
+def getNumActions(agent):
+    return agent.totalNumActions
 
 
 def printExplorerLocation(board, x, y):
@@ -753,10 +763,32 @@ class Main:
     # print(ReactExplorer)
     folExplorer = Explorer(copy.deepcopy(world))
     goldFish = ReactiveExplorer(copy.deepcopy(world))
-    print("Reasoning Agent:")
-    printVariables(folExplorer)
-    print("Reactive Agent:")
-    printVariables(goldFish)
+    # print("Reasoning Agent:")
+    # printVariables(folExplorer)
+    # print("Reactive Agent:")
+    # printVariables(goldFish)
+
+    pointsFOL = []
+    pointsReactive = []
+    actionsFOL = []
+    actionsReactive = []
+    for i in range(10):
+        folExplorer = Explorer(copy.deepcopy(world))
+        goldFish = ReactiveExplorer(copy.deepcopy(world))
+        pointsFOL.append(getPoints(folExplorer))
+        pointsReactive.append(getPoints(goldFish))
+        actionsFOL.append(getNumActions(folExplorer))
+        actionsReactive.append(getNumActions(goldFish))
+
+    plt.scatter(y=pointsFOL, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='g', marker="s", label='FOL Explorer')
+    plt.scatter(y=pointsReactive, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='r', marker="o", label='Reactive Explorer')
+    plt.legend(loc='center right')
+    plt.show()
+
+    plt.scatter(y=actionsFOL, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='g', marker="s", label='FOL Explorer')
+    plt.scatter(y=actionsReactive, x=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], c='r', marker="o", label='Reactive Explorer')
+    plt.legend(loc='center right')
+    plt.show()
 
 
 Main()
